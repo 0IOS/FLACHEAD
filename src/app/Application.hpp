@@ -9,13 +9,10 @@ public:
     ~Application();
 
     bool Initialize();
-
     void Run();
-
     void Shutdown();
 
 private:
     bool m_Running;
-
-    Window m_window;
+    Window m_Window;
 };
