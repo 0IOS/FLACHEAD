@@ -1,34 +1,24 @@
-# Build output
+# =========================
+# Build
+# =========================
 build/
 cmake-build-*/
-
-# CMake generated files
-CMakeCache.txt
 CMakeFiles/
-CTestTestfile.cmake
+CMakeCache.txt
 cmake_install.cmake
+CTestTestfile.cmake
 Makefile
 compile_commands.json
 
-# VS Code
+# =========================
+# IDE
+# =========================
 .vscode/
-
-# Qt Creator / CLion
 .idea/
 
-# macOS
-.DS_Store
-
-# Linux
-.directory
-
-# Windows
-Thumbs.db
-
-# Logs
-*.log
-
-# Object files
+# =========================
+# Object Files
+# =========================
 *.o
 *.obj
 
@@ -42,16 +32,17 @@ Thumbs.db
 *.exe
 *.out
 
-# Temporary files
+# Logs
+*.log
+
+# Temp
 *.tmp
 *.temp
-
-# Vim
 *.swp
 *.swo
-
-# Backup files
 *~
 
-# Generated assets cache (if we add one later)
-cache/
+# OS Files
+.DS_Store
+.directory
+Thumbs.db
