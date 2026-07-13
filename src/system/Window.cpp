@@ -1,30 +1,48 @@
 #include "Window.hpp"
 
+#include <iostream>
+
 Window::Window()
     : m_Window(nullptr),
       m_Renderer(nullptr)
 {
 }
 
+Window::~Window()
+{
+    Destroy();
+}
+
 bool Window::Create()
 {
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        std::cerr << "Failed to initialize SDL video: " << SDL_GetError() << '\n';
         return false;
+    }
 
     m_Window = SDL_CreateWindow(
         "FLACHEAD",
         900,
         600,
-        0
+        SDL_WINDOW_RESIZABLE
     );
 
     if (!m_Window)
+    {
+        std::cerr << "Failed to create window: " << SDL_GetError() << '\n';
+        SDL_Quit();
         return false;
+    }
 
     m_Renderer = SDL_CreateRenderer(m_Window, nullptr);
 
     if (!m_Renderer)
+    {
+        std::cerr << "Failed to create renderer: " << SDL_GetError() << '\n';
+        Destroy();
         return false;
+    }
 
     return true;
 }
