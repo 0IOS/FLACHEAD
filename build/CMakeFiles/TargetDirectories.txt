@@ -1,3 +1,0 @@
-/home/oios/projects/FLACHEAD/build/CMakeFiles/FLACHEAD.dir
-/home/oios/projects/FLACHEAD/build/CMakeFiles/edit_cache.dir
-/home/oios/projects/FLACHEAD/build/CMakeFiles/rebuild_cache.dir

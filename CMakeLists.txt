@@ -8,4 +8,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(FLACHEAD
     src/main.cpp
     src/app/Application.cpp
+    src/system/Window.cpp
 )
