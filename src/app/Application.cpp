@@ -41,6 +41,7 @@ void Application::Run()
         m_Renderer.BeginFrame();
 
         WindowSize size = m_Window.GetSize();
+        std::cout << size.width << " x " << size.height << '\r' << std::flush;
 
         m_HomeScreen.Draw(
             *m_Canvas,

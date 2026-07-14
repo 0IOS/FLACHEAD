@@ -3,7 +3,7 @@
 namespace Layout
 {
 
-Rect Layout::AlbumArt(
+Rect AlbumArt(
     int windowWidth,
     int windowHeight)
 {
@@ -20,7 +20,7 @@ Rect Layout::AlbumArt(
     );
 }
 
-Rect Layout::SongInfo(
+Rect SongInfo(
     int windowWidth,
     int windowHeight)
 {
@@ -40,7 +40,7 @@ Rect Layout::SongInfo(
     );
 }
 
-Rect Layout::ProgressBar(
+Rect ProgressBar(
     int windowWidth,
     int windowHeight)
 {
@@ -61,7 +61,7 @@ Rect Layout::ProgressBar(
     );
 }
 
-Rect Layout::BottomBar(
+Rect BottomBar(
     int windowWidth,
     int windowHeight)
 {

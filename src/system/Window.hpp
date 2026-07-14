@@ -21,8 +21,6 @@ public:
 
     bool PollEvents();
 
-    SDL_Window* GetNativeWindow() const;
-
 private:
     SDL_Window* m_Window;
 };
