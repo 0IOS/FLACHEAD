@@ -1,7 +1,13 @@
 file(REMOVE_RECURSE
   "CMakeFiles/FLACHEAD.dir/link.d"
+  "CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o"
+  "CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o.d"
+  "CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o"
+  "CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o.d"
   "CMakeFiles/FLACHEAD.dir/src/main.cpp.o"
   "CMakeFiles/FLACHEAD.dir/src/main.cpp.o.d"
+  "CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o"
+  "CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o.d"
   "FLACHEAD"
   "FLACHEAD.pdb"
 )

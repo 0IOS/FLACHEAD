@@ -86,19 +86,67 @@ CMakeFiles/FLACHEAD.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FLACHEAD.dir/src/main.cpp.s"
 	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oios/projects/FLACHEAD/src/main.cpp -o CMakeFiles/FLACHEAD.dir/src/main.cpp.s
 
+CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o: CMakeFiles/FLACHEAD.dir/flags.make
+CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o: /home/oios/projects/FLACHEAD/src/app/Application.cpp
+CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o: CMakeFiles/FLACHEAD.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oios/projects/FLACHEAD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o -MF CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o.d -o CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o -c /home/oios/projects/FLACHEAD/src/app/Application.cpp
+
+CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.i"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oios/projects/FLACHEAD/src/app/Application.cpp > CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.i
+
+CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.s"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oios/projects/FLACHEAD/src/app/Application.cpp -o CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.s
+
+CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o: CMakeFiles/FLACHEAD.dir/flags.make
+CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o: /home/oios/projects/FLACHEAD/src/system/Window.cpp
+CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o: CMakeFiles/FLACHEAD.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oios/projects/FLACHEAD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o -MF CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o.d -o CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o -c /home/oios/projects/FLACHEAD/src/system/Window.cpp
+
+CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.i"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oios/projects/FLACHEAD/src/system/Window.cpp > CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.i
+
+CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.s"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oios/projects/FLACHEAD/src/system/Window.cpp -o CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.s
+
+CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o: CMakeFiles/FLACHEAD.dir/flags.make
+CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o: /home/oios/projects/FLACHEAD/src/core/Renderer.cpp
+CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o: CMakeFiles/FLACHEAD.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oios/projects/FLACHEAD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o -MF CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o.d -o CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o -c /home/oios/projects/FLACHEAD/src/core/Renderer.cpp
+
+CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.i"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oios/projects/FLACHEAD/src/core/Renderer.cpp > CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.i
+
+CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.s"
+	/usr/sbin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oios/projects/FLACHEAD/src/core/Renderer.cpp -o CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.s
+
 # Object files for target FLACHEAD
 FLACHEAD_OBJECTS = \
-"CMakeFiles/FLACHEAD.dir/src/main.cpp.o"
+"CMakeFiles/FLACHEAD.dir/src/main.cpp.o" \
+"CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o" \
+"CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o" \
+"CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o"
 
 # External object files for target FLACHEAD
 FLACHEAD_EXTERNAL_OBJECTS =
 
 FLACHEAD: CMakeFiles/FLACHEAD.dir/src/main.cpp.o
+FLACHEAD: CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o
+FLACHEAD: CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o
+FLACHEAD: CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o
 FLACHEAD: CMakeFiles/FLACHEAD.dir/build.make
 FLACHEAD: CMakeFiles/FLACHEAD.dir/compiler_depend.ts
 FLACHEAD: /usr/lib64/libSDL3.so.0.4.12
 FLACHEAD: CMakeFiles/FLACHEAD.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oios/projects/FLACHEAD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable FLACHEAD"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oios/projects/FLACHEAD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable FLACHEAD"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/FLACHEAD.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

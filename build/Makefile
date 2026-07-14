@@ -129,6 +129,54 @@ FLACHEAD/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/build
 .PHONY : FLACHEAD/fast
 
+src/app/Application.o: src/app/Application.cpp.o
+.PHONY : src/app/Application.o
+
+# target to build an object file
+src/app/Application.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o
+.PHONY : src/app/Application.cpp.o
+
+src/app/Application.i: src/app/Application.cpp.i
+.PHONY : src/app/Application.i
+
+# target to preprocess a source file
+src/app/Application.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.i
+.PHONY : src/app/Application.cpp.i
+
+src/app/Application.s: src/app/Application.cpp.s
+.PHONY : src/app/Application.s
+
+# target to generate assembly for a file
+src/app/Application.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.s
+.PHONY : src/app/Application.cpp.s
+
+src/core/Renderer.o: src/core/Renderer.cpp.o
+.PHONY : src/core/Renderer.o
+
+# target to build an object file
+src/core/Renderer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o
+.PHONY : src/core/Renderer.cpp.o
+
+src/core/Renderer.i: src/core/Renderer.cpp.i
+.PHONY : src/core/Renderer.i
+
+# target to preprocess a source file
+src/core/Renderer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.i
+.PHONY : src/core/Renderer.cpp.i
+
+src/core/Renderer.s: src/core/Renderer.cpp.s
+.PHONY : src/core/Renderer.s
+
+# target to generate assembly for a file
+src/core/Renderer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.s
+.PHONY : src/core/Renderer.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -153,6 +201,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/system/Window.o: src/system/Window.cpp.o
+.PHONY : src/system/Window.o
+
+# target to build an object file
+src/system/Window.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o
+.PHONY : src/system/Window.cpp.o
+
+src/system/Window.i: src/system/Window.cpp.i
+.PHONY : src/system/Window.i
+
+# target to preprocess a source file
+src/system/Window.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.i
+.PHONY : src/system/Window.cpp.i
+
+src/system/Window.s: src/system/Window.cpp.s
+.PHONY : src/system/Window.s
+
+# target to generate assembly for a file
+src/system/Window.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.s
+.PHONY : src/system/Window.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -162,9 +234,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... FLACHEAD"
+	@echo "... src/app/Application.o"
+	@echo "... src/app/Application.i"
+	@echo "... src/app/Application.s"
+	@echo "... src/core/Renderer.o"
+	@echo "... src/core/Renderer.i"
+	@echo "... src/core/Renderer.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/system/Window.o"
+	@echo "... src/system/Window.i"
+	@echo "... src/system/Window.s"
 .PHONY : help
 
 

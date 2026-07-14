@@ -3,6 +3,9 @@ FLACHEAD: \
   /usr/lib/gcc/x86_64-redhat-linux/16/../../../../lib64/crti.o \
   /usr/lib/gcc/x86_64-redhat-linux/16/crtbegin.o \
   CMakeFiles/FLACHEAD.dir/src/main.cpp.o \
+  CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o \
+  CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o \
+  CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o \
   /usr/lib64/libSDL3.so.0.4.12 \
   /usr/lib/gcc/x86_64-redhat-linux/16/libstdc++.so \
   /usr/lib/gcc/x86_64-redhat-linux/16/../../../../lib64/libm.so \
@@ -46,6 +49,12 @@ FLACHEAD: \
 /usr/lib/gcc/x86_64-redhat-linux/16/crtbegin.o:
 
 CMakeFiles/FLACHEAD.dir/src/main.cpp.o:
+
+CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o:
+
+CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o:
+
+CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o:
 
 /usr/lib64/libSDL3.so.0.4.12:
 
