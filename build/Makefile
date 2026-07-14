@@ -249,6 +249,30 @@ src/system/Window.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.s
 .PHONY : src/system/Window.cpp.s
 
+src/ui/Canvas.o: src/ui/Canvas.cpp.o
+.PHONY : src/ui/Canvas.o
+
+# target to build an object file
+src/ui/Canvas.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o
+.PHONY : src/ui/Canvas.cpp.o
+
+src/ui/Canvas.i: src/ui/Canvas.cpp.i
+.PHONY : src/ui/Canvas.i
+
+# target to preprocess a source file
+src/ui/Canvas.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.i
+.PHONY : src/ui/Canvas.cpp.i
+
+src/ui/Canvas.s: src/ui/Canvas.cpp.s
+.PHONY : src/ui/Canvas.s
+
+# target to generate assembly for a file
+src/ui/Canvas.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.s
+.PHONY : src/ui/Canvas.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -273,6 +297,9 @@ help:
 	@echo "... src/system/Window.o"
 	@echo "... src/system/Window.i"
 	@echo "... src/system/Window.s"
+	@echo "... src/ui/Canvas.o"
+	@echo "... src/ui/Canvas.i"
+	@echo "... src/ui/Canvas.s"
 .PHONY : help
 
 

@@ -7,6 +7,7 @@ FLACHEAD: \
   CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o \
   CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o \
   CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o \
+  CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o \
   /usr/lib64/libSDL3.so.0.4.12 \
   /usr/lib/gcc/x86_64-redhat-linux/16/libstdc++.so \
   /usr/lib/gcc/x86_64-redhat-linux/16/../../../../lib64/libm.so \
@@ -58,6 +59,8 @@ CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o:
 CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o:
 
 CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o:
+
+CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o:
 
 /usr/lib64/libSDL3.so.0.4.12:
 

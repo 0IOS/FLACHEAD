@@ -13,6 +13,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/oios/projects/FLACHEAD/src/main.cpp" "CMakeFiles/FLACHEAD.dir/src/main.cpp.o" "gcc" "CMakeFiles/FLACHEAD.dir/src/main.cpp.o.d"
   "/home/oios/projects/FLACHEAD/src/math/Color.cpp" "CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o" "gcc" "CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o.d"
   "/home/oios/projects/FLACHEAD/src/system/Window.cpp" "CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o" "gcc" "CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o.d"
+  "/home/oios/projects/FLACHEAD/src/ui/Canvas.cpp" "CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o" "gcc" "CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o.d"
   "" "FLACHEAD" "gcc" "CMakeFiles/FLACHEAD.dir/link.d"
   )
 

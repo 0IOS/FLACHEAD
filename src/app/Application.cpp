@@ -24,10 +24,9 @@ bool Application::Initialize()
 
     if (!m_Renderer.Create(m_Window.GetNativeWindow()))
         return false;
-    
-    if (!m_Renderer.Create(m_Window.GetNativeWindow()))
-        return false;
 
+    m_Canvas = new Canvas(m_Renderer);
+    
     m_Running = true;
 
     return true;
@@ -38,8 +37,6 @@ void Application::Run()
     while (m_Running)
     {
         m_Running = m_Window.PollEvents();
-
-        m_Canvas = new Canvas(m_Renderer);
 
         m_Renderer.BeginFrame();
 
