@@ -177,6 +177,30 @@ src/core/Renderer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.s
 .PHONY : src/core/Renderer.cpp.s
 
+src/layout/Layout.o: src/layout/Layout.cpp.o
+.PHONY : src/layout/Layout.o
+
+# target to build an object file
+src/layout/Layout.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/layout/Layout.cpp.o
+.PHONY : src/layout/Layout.cpp.o
+
+src/layout/Layout.i: src/layout/Layout.cpp.i
+.PHONY : src/layout/Layout.i
+
+# target to preprocess a source file
+src/layout/Layout.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/layout/Layout.cpp.i
+.PHONY : src/layout/Layout.cpp.i
+
+src/layout/Layout.s: src/layout/Layout.cpp.s
+.PHONY : src/layout/Layout.s
+
+# target to generate assembly for a file
+src/layout/Layout.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/layout/Layout.cpp.s
+.PHONY : src/layout/Layout.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -312,6 +336,9 @@ help:
 	@echo "... src/core/Renderer.o"
 	@echo "... src/core/Renderer.i"
 	@echo "... src/core/Renderer.s"
+	@echo "... src/layout/Layout.o"
+	@echo "... src/layout/Layout.i"
+	@echo "... src/layout/Layout.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

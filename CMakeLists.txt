@@ -16,6 +16,6 @@ add_executable(FLACHEAD
     src/math/Color.cpp
     src/ui/Canvas.cpp
     src/screens/HomeScreen.cpp
-    src/layouts/Layout.cpp
+    src/layout/Layout.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE SDL3::SDL3)

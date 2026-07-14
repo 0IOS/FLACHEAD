@@ -40,7 +40,13 @@ void Application::Run()
 
         m_Renderer.BeginFrame();
 
-        m_HomeScreen.Draw(*m_Canvas);
+        WindowSize size = m_Window.GetSize();
+
+        m_HomeScreen.Draw(
+            *m_Canvas,
+            size.width,
+            size.height
+        );
 
         m_Renderer.EndFrame();
 

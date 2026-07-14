@@ -4,10 +4,6 @@
 
 namespace Layout
 {
-    // Window
-    constexpr float WindowWidth  = 900.0f;
-    constexpr float WindowHeight = 600.0f;
-
     // Margins
     constexpr float Padding = 30.0f;
 
@@ -23,8 +19,23 @@ namespace Layout
     // Progress
     constexpr float ProgressHeight = 20.0f;
 
-    Rect AlbumArt();
-    Rect SongInfo();
-    Rect ProgressBar();
-    Rect BottomBar();
+    Rect AlbumArt(
+        int windowWidth,
+        int windowHeight
+    );
+
+    Rect SongInfo(
+        int windowWidth,
+        int windowHeight
+    );
+
+    Rect ProgressBar(
+        int windowWidth,
+        int windowHeight
+    );
+
+    Rect BottomBar(
+        int windowWidth,
+        int windowHeight
+    );
 }

@@ -401,6 +401,12 @@ CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o: /home/oios/projects/FLACHEAD/sr
   /usr/lib/gcc/x86_64-redhat-linux/16/include/stddef.h \
   /usr/lib/gcc/x86_64-redhat-linux/16/include/stdint.h
 
+CMakeFiles/FLACHEAD.dir/src/layout/Layout.cpp.o: /home/oios/projects/FLACHEAD/src/layout/Layout.cpp \
+  /home/oios/projects/FLACHEAD/src/math/Rect.hpp \
+  /home/oios/projects/FLACHEAD/src/math/Vec2.hpp \
+  /home/oios/projects/FLACHEAD/src/layout/Layout.hpp \
+  /usr/include/stdc-predef.h
+
 CMakeFiles/FLACHEAD.dir/src/main.cpp.o: /home/oios/projects/FLACHEAD/src/main.cpp \
   /home/oios/projects/FLACHEAD/src/screens/HomeScreen.hpp \
   /home/oios/projects/FLACHEAD/src/system/Window.hpp \
@@ -542,6 +548,7 @@ CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o: /home/oios/projects/FLACHEAD/src/m
   /usr/lib/gcc/x86_64-redhat-linux/16/include/stdint.h
 
 CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.o: /home/oios/projects/FLACHEAD/src/screens/HomeScreen.cpp \
+  /home/oios/projects/FLACHEAD/src/layout/Layout.hpp \
   /home/oios/projects/FLACHEAD/src/math/Color.hpp \
   /home/oios/projects/FLACHEAD/src/math/Rect.hpp \
   /home/oios/projects/FLACHEAD/src/math/Vec2.hpp \
@@ -1067,6 +1074,7 @@ FLACHEAD: /lib64/ld-linux-x86-64.so.2 \
   /usr/lib64/libc_nonshared.a \
   CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o \
   CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o \
+  CMakeFiles/FLACHEAD.dir/src/layout/Layout.cpp.o \
   CMakeFiles/FLACHEAD.dir/src/main.cpp.o \
   CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o \
   CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.o \
@@ -1125,6 +1133,8 @@ CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o:
 /usr/include/sys/select.h:
 
 /usr/include/sys/cdefs.h:
+
+/home/oios/projects/FLACHEAD/src/layout/Layout.hpp:
 
 /usr/include/string.h:
 
@@ -1337,6 +1347,8 @@ CMakeFiles/FLACHEAD.dir/src/app/Application.cpp.o:
 /usr/include/SDL3/SDL_audio.h:
 
 /usr/include/SDL3/SDL_surface.h:
+
+CMakeFiles/FLACHEAD.dir/src/layout/Layout.cpp.o:
 
 /usr/include/asm-generic/errno-base.h:
 
@@ -1619,6 +1631,8 @@ CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o:
 /usr/include/c++/16/bits/stl_algobase.h:
 
 /usr/include/c++/16/bits/stl_iterator_base_funcs.h:
+
+/home/oios/projects/FLACHEAD/src/layout/Layout.cpp:
 
 /usr/include/c++/16/bits/stl_iterator_base_types.h:
 

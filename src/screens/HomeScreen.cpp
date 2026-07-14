@@ -3,7 +3,10 @@
 #include "../layout/Layout.hpp"
 #include "../math/Color.hpp"
 
-void HomeScreen::Draw(Canvas& canvas)
+void HomeScreen::Draw(
+    Canvas& canvas,
+    int windowWidth,
+    int windowHeight)
 {
     // Album Art
     canvas.DrawRect(
