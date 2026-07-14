@@ -1,6 +1,7 @@
 #include "HomeScreen.hpp"
 
 #include "../layout/Layout.hpp"
+#include "../layout/LayoutMetrics.hpp"
 #include "../math/Color.hpp"
 
 void HomeScreen::Draw(
@@ -8,23 +9,29 @@ void HomeScreen::Draw(
     int windowWidth,
     int windowHeight)
 {
+    LayoutMetrics metrics =
+        Layout::Calculate(
+            windowWidth,
+            windowHeight
+        );
+
     canvas.DrawRect(
-        Layout::AlbumArt(windowWidth, windowHeight),
+        Layout::AlbumArt(metrics),
         Color::White
     );
 
     canvas.DrawRect(
-        Layout::SongInfo(windowWidth, windowHeight),
+        Layout::SongInfo(metrics),
         Color::White
     );
 
     canvas.DrawRect(
-        Layout::ProgressBar(windowWidth, windowHeight),
+        Layout::ProgressBar(metrics),
         Color::White
     );
 
     canvas.DrawRect(
-        Layout::BottomBar(windowWidth, windowHeight),
+        Layout::BottomBar(metrics),
         Color::White
     );
 }

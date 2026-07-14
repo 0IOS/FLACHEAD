@@ -1,26 +1,19 @@
 #pragma once
 
+#include "LayoutMetrics.hpp"
 #include "../math/Rect.hpp"
 
 namespace Layout
 {
-    // Margins
-    constexpr float Padding = 30.0f;
+    LayoutMetrics Calculate(
+        int windowWidth,
+        int windowHeight);
 
-    // Album Art
-    constexpr float AlbumArtSize = 360.0f;
+    Rect AlbumArt(const LayoutMetrics& m);
 
-    // Song Info
-    constexpr float SongInfoHeight = 80.0f;
+    Rect SongInfo(const LayoutMetrics& m);
 
-    // Progress
-    constexpr float ProgressHeight = 20.0f;
+    Rect ProgressBar(const LayoutMetrics& m);
 
-    // Bottom Bar
-    constexpr float BottomBarHeight = 60.0f;
-
-    Rect AlbumArt(int windowWidth, int windowHeight);
-    Rect SongInfo(int windowWidth, int windowHeight);
-    Rect ProgressBar(int windowWidth, int windowHeight);
-    Rect BottomBar(int windowWidth, int windowHeight);
+    Rect BottomBar(const LayoutMetrics& m);
 }

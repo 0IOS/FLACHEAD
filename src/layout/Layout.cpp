@@ -3,56 +3,77 @@
 namespace Layout
 {
 
-Rect AlbumArt(int windowWidth, int /*windowHeight*/)
+LayoutMetrics Calculate(
+    int windowWidth,
+    int windowHeight)
 {
-    float x = (windowWidth - AlbumArtSize) / 2.0f;
-    float y = Padding;
+    LayoutMetrics m;
 
-    return Rect(x, y, AlbumArtSize, AlbumArtSize);
+    m.windowWidth = static_cast<float>(windowWidth);
+    m.windowHeight = static_cast<float>(windowHeight);
+
+    m.padding = windowWidth * 0.04f;
+
+    m.albumSize = windowWidth * 0.45f;
+
+    float maxAlbum = windowHeight * 0.55f;
+
+    if (m.albumSize > maxAlbum)
+        m.albumSize = maxAlbum;
+
+    m.songHeight = m.albumSize * 0.18f;
+
+    m.progressHeight = m.albumSize * 0.04f;
+
+    if (m.progressHeight < 6.0f)
+        m.progressHeight = 6.0f;
+
+    m.bottomBarHeight = windowHeight * 0.10f;
+
+    return m;
 }
 
-Rect SongInfo(int windowWidth, int /*windowHeight*/)
+Rect AlbumArt(const LayoutMetrics& m)
 {
-    float x = (windowWidth - AlbumArtSize) / 2.0f;
-
-    float y =
-        Padding +
-        AlbumArtSize +
-        20.0f;
-
     return Rect(
-        x,
-        y,
-        AlbumArtSize,
-        SongInfoHeight
+        (m.windowWidth - m.albumSize) / 2.0f,
+        m.padding,
+        m.albumSize,
+        m.albumSize
     );
 }
 
-Rect ProgressBar(int windowWidth, int /*windowHeight*/)
+Rect SongInfo(const LayoutMetrics& m)
 {
-    float x = (windowWidth - AlbumArtSize) / 2.0f;
-
-    float y =
-        Padding +
-        AlbumArtSize +
-        SongInfoHeight +
-        40.0f;
-
     return Rect(
-        x,
-        y,
-        AlbumArtSize,
-        ProgressHeight
+        (m.windowWidth - m.albumSize) / 2.0f,
+        m.padding + m.albumSize + m.padding,
+        m.albumSize,
+        m.songHeight
     );
 }
 
-Rect BottomBar(int windowWidth, int windowHeight)
+Rect ProgressBar(const LayoutMetrics& m)
+{
+    return Rect(
+        (m.windowWidth - m.albumSize) / 2.0f,
+        m.padding +
+        m.albumSize +
+        m.padding +
+        m.songHeight +
+        m.padding,
+        m.albumSize,
+        m.progressHeight
+    );
+}
+
+Rect BottomBar(const LayoutMetrics& m)
 {
     return Rect(
         0,
-        windowHeight - BottomBarHeight,
-        windowWidth,
-        BottomBarHeight
+        m.windowHeight - m.bottomBarHeight,
+        m.windowWidth,
+        m.bottomBarHeight
     );
 }
 
