@@ -13,5 +13,7 @@ add_executable(FLACHEAD
     src/app/Application.cpp
     src/system/Window.cpp
     src/core/Renderer.cpp
+    src/math/Color.cpp
+    src/ui/Canvas.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE SDL3::SDL3)

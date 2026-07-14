@@ -37,19 +37,37 @@ void Renderer::EndFrame()
     SDL_RenderPresent(m_Renderer);
 }
 
-void Renderer::SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+void Renderer::SetColor(const Color& color)
 {
-    SDL_SetRenderDrawColor(m_Renderer, r, g, b, a);
+    SDL_SetRenderDrawColor(
+        m_Renderer,
+        color.r,
+        color.g,
+        color.b,
+        color.a
+    );
 }
 
-void Renderer::DrawRect(float x, float y, float w, float h)
+void Renderer::DrawRect(const Rect& rect)
 {
-    SDL_FRect rect{ x, y, w, h };
-    SDL_RenderRect(m_Renderer, &rect);
+    SDL_FRect sdlRect{
+        rect.position.x,
+        rect.position.y,
+        rect.size.x,
+        rect.size.y
+    };
+
+    SDL_RenderRect(m_Renderer, &sdlRect);
 }
 
-void Renderer::FillRect(float x, float y, float w, float h)
+void Renderer::FillRect(const Rect& rect)
 {
-    SDL_FRect rect{ x, y, w, h };
-    SDL_RenderFillRect(m_Renderer, &rect);
+    SDL_FRect sdlRect{
+        rect.position.x,
+        rect.position.y,
+        rect.size.x,
+        rect.size.y
+    };
+
+    SDL_RenderFillRect(m_Renderer, &sdlRect);
 }

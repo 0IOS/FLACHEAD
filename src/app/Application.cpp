@@ -5,7 +5,8 @@
 #include <iostream>
 
 Application::Application()
-    : m_Running(false)
+    : m_Running(false),
+    m_Canvas(nullptr)
 {
 }
 
@@ -23,6 +24,9 @@ bool Application::Initialize()
 
     if (!m_Renderer.Create(m_Window.GetNativeWindow()))
         return false;
+    
+    if (!m_Renderer.Create(m_Window.GetNativeWindow()))
+        return false;
 
     m_Running = true;
 
@@ -35,11 +39,14 @@ void Application::Run()
     {
         m_Running = m_Window.PollEvents();
 
+        m_Canvas = new Canvas(m_Renderer);
+
         m_Renderer.BeginFrame();
 
         // Demo rectangle
-        m_Renderer.SetColor(255, 255, 255);
-        m_Renderer.FillRect(250.0f, 150.0f, 400.0f, 300.0f);
+       Rect rect(250,150,400,300);
+
+        m_Canvas->FillRect(rect, Color::White);
 
         m_Renderer.EndFrame();
 
@@ -51,4 +58,6 @@ void Application::Shutdown()
 {
     m_Renderer.Destroy();
     m_Window.Destroy();
+    delete m_Canvas;
+    m_Canvas=nullptr;
 }

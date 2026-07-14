@@ -1,5 +1,6 @@
 #pragma once
-
+#include "../math/Color.hpp"
+#include "../math/Rect.hpp"
 #include <SDL3/SDL.h>
 
 class Renderer
@@ -14,10 +15,10 @@ public:
     void BeginFrame();
     void EndFrame();
 
-    void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a = 255);
+    void SetColor(const Color& color);
 
-    void DrawRect(float x, float y, float w, float h);
-    void FillRect(float x, float y, float w, float h);
+    void DrawRect(const Rect& rect);
+    void FillRect(const Rect& rect);
 
 private:
     SDL_Renderer* m_Renderer;

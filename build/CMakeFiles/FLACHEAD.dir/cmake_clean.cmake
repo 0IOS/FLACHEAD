@@ -6,6 +6,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/FLACHEAD.dir/src/core/Renderer.cpp.o.d"
   "CMakeFiles/FLACHEAD.dir/src/main.cpp.o"
   "CMakeFiles/FLACHEAD.dir/src/main.cpp.o.d"
+  "CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o"
+  "CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o.d"
   "CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o"
   "CMakeFiles/FLACHEAD.dir/src/system/Window.cpp.o.d"
   "FLACHEAD"

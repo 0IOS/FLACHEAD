@@ -201,6 +201,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/math/Color.o: src/math/Color.cpp.o
+.PHONY : src/math/Color.o
+
+# target to build an object file
+src/math/Color.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.o
+.PHONY : src/math/Color.cpp.o
+
+src/math/Color.i: src/math/Color.cpp.i
+.PHONY : src/math/Color.i
+
+# target to preprocess a source file
+src/math/Color.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.i
+.PHONY : src/math/Color.cpp.i
+
+src/math/Color.s: src/math/Color.cpp.s
+.PHONY : src/math/Color.s
+
+# target to generate assembly for a file
+src/math/Color.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.s
+.PHONY : src/math/Color.cpp.s
+
 src/system/Window.o: src/system/Window.cpp.o
 .PHONY : src/system/Window.o
 
@@ -243,6 +267,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/math/Color.o"
+	@echo "... src/math/Color.i"
+	@echo "... src/math/Color.s"
 	@echo "... src/system/Window.o"
 	@echo "... src/system/Window.i"
 	@echo "... src/system/Window.s"
