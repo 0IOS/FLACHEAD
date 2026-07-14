@@ -7,9 +7,6 @@ namespace Layout
     // Margins
     constexpr float Padding = 30.0f;
 
-    // Bottom bar
-    constexpr float BottomBarHeight = 60.0f;
-
     // Album Art
     constexpr float AlbumArtSize = 360.0f;
 
@@ -19,23 +16,11 @@ namespace Layout
     // Progress
     constexpr float ProgressHeight = 20.0f;
 
-    Rect AlbumArt(
-        int windowWidth,
-        int windowHeight
-    );
+    // Bottom Bar
+    constexpr float BottomBarHeight = 60.0f;
 
-    Rect SongInfo(
-        int windowWidth,
-        int windowHeight
-    );
-
-    Rect ProgressBar(
-        int windowWidth,
-        int windowHeight
-    );
-
-    Rect BottomBar(
-        int windowWidth,
-        int windowHeight
-    );
+    Rect AlbumArt(int windowWidth, int windowHeight);
+    Rect SongInfo(int windowWidth, int windowHeight);
+    Rect ProgressBar(int windowWidth, int windowHeight);
+    Rect BottomBar(int windowWidth, int windowHeight);
 }

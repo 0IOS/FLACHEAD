@@ -3,29 +3,17 @@
 namespace Layout
 {
 
-Rect AlbumArt(
-    int windowWidth,
-    int windowHeight)
+Rect AlbumArt(int windowWidth, int /*windowHeight*/)
 {
-    float x =
-        (windowWidth - AlbumArtSize) / 2.0f;
-
+    float x = (windowWidth - AlbumArtSize) / 2.0f;
     float y = Padding;
 
-    return Rect(
-        x,
-        y,
-        AlbumArtSize,
-        AlbumArtSize
-    );
+    return Rect(x, y, AlbumArtSize, AlbumArtSize);
 }
 
-Rect SongInfo(
-    int windowWidth,
-    int windowHeight)
+Rect SongInfo(int windowWidth, int /*windowHeight*/)
 {
-    float x =
-        (windowWidth - AlbumArtSize) / 2.0f;
+    float x = (windowWidth - AlbumArtSize) / 2.0f;
 
     float y =
         Padding +
@@ -40,12 +28,9 @@ Rect SongInfo(
     );
 }
 
-Rect ProgressBar(
-    int windowWidth,
-    int windowHeight)
+Rect ProgressBar(int windowWidth, int /*windowHeight*/)
 {
-    float x =
-        (windowWidth - AlbumArtSize) / 2.0f;
+    float x = (windowWidth - AlbumArtSize) / 2.0f;
 
     float y =
         Padding +
@@ -61,9 +46,7 @@ Rect ProgressBar(
     );
 }
 
-Rect BottomBar(
-    int windowWidth,
-    int windowHeight)
+Rect BottomBar(int windowWidth, int windowHeight)
 {
     return Rect(
         0,

@@ -8,27 +8,23 @@ void HomeScreen::Draw(
     int windowWidth,
     int windowHeight)
 {
-    // Album Art
     canvas.DrawRect(
-        Layout::AlbumArt(),
+        Layout::AlbumArt(windowWidth, windowHeight),
         Color::White
     );
 
-    // Song Information
     canvas.DrawRect(
-        Layout::SongInfo(),
+        Layout::SongInfo(windowWidth, windowHeight),
         Color::White
     );
 
-    // Progress Bar
     canvas.DrawRect(
-        Layout::ProgressBar(),
+        Layout::ProgressBar(windowWidth, windowHeight),
         Color::White
     );
 
-    // Bottom Navigation Bar
     canvas.DrawRect(
-        Layout::BottomBar(),
+        Layout::BottomBar(windowWidth, windowHeight),
         Color::White
     );
 }

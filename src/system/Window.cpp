@@ -70,6 +70,16 @@ bool Window::PollEvents()
     return true;
 }
 
+WindowSize Window::GetSize() const
+{
+    int width = 0;
+    int height = 0;
+
+    SDL_GetWindowSize(m_Window, &width, &height);
+
+    return { width, height };
+}
+
 SDL_Window* Window::GetNativeWindow() const
 {
     return m_Window;
