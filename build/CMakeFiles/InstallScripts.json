@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/oios/projects/FLACHEAD/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
