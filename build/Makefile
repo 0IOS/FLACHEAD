@@ -225,6 +225,30 @@ src/math/Color.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/math/Color.cpp.s
 .PHONY : src/math/Color.cpp.s
 
+src/screens/HomeScreen.o: src/screens/HomeScreen.cpp.o
+.PHONY : src/screens/HomeScreen.o
+
+# target to build an object file
+src/screens/HomeScreen.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.o
+.PHONY : src/screens/HomeScreen.cpp.o
+
+src/screens/HomeScreen.i: src/screens/HomeScreen.cpp.i
+.PHONY : src/screens/HomeScreen.i
+
+# target to preprocess a source file
+src/screens/HomeScreen.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.i
+.PHONY : src/screens/HomeScreen.cpp.i
+
+src/screens/HomeScreen.s: src/screens/HomeScreen.cpp.s
+.PHONY : src/screens/HomeScreen.s
+
+# target to generate assembly for a file
+src/screens/HomeScreen.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/FLACHEAD.dir/build.make CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.s
+.PHONY : src/screens/HomeScreen.cpp.s
+
 src/system/Window.o: src/system/Window.cpp.o
 .PHONY : src/system/Window.o
 
@@ -294,6 +318,9 @@ help:
 	@echo "... src/math/Color.o"
 	@echo "... src/math/Color.i"
 	@echo "... src/math/Color.s"
+	@echo "... src/screens/HomeScreen.o"
+	@echo "... src/screens/HomeScreen.i"
+	@echo "... src/screens/HomeScreen.s"
 	@echo "... src/system/Window.o"
 	@echo "... src/system/Window.i"
 	@echo "... src/system/Window.s"

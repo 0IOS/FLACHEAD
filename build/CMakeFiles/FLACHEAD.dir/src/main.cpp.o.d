@@ -64,4 +64,5 @@ CMakeFiles/FLACHEAD.dir/src/main.cpp.o: \
  /usr/include/SDL3/SDL_time.h /usr/include/SDL3/SDL_timer.h \
  /usr/include/SDL3/SDL_tray.h /usr/include/SDL3/SDL_version.h \
  /usr/include/SDL3/SDL_oldnames.h \
- /home/oios/projects/FLACHEAD/src/app/../system/Window.hpp
+ /home/oios/projects/FLACHEAD/src/app/../system/Window.hpp \
+ /home/oios/projects/FLACHEAD/src/app/../screens/HomeScreen.hpp

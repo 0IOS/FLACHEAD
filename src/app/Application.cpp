@@ -40,10 +40,7 @@ void Application::Run()
 
         m_Renderer.BeginFrame();
 
-        // Demo rectangle
-       Rect rect(250,150,400,300);
-
-        m_Canvas->FillRect(rect, Color::White);
+        m_HomeScreen.Draw(*m_Canvas);
 
         m_Renderer.EndFrame();
 

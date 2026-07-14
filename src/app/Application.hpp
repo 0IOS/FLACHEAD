@@ -3,6 +3,7 @@
 #include "../ui/Canvas.hpp"
 #include "../system/Window.hpp"
 #include "../core/Renderer.hpp"
+#include "../screens/HomeScreen.hpp"
 
 class Application
 {
@@ -16,6 +17,7 @@ public:
 
 private:
     Window m_Window;
+    HomeScreen m_HomeScreen;
     Renderer m_Renderer;
     Canvas* m_Canvas;
 

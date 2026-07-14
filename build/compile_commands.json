@@ -34,5 +34,11 @@
   "command": "/usr/sbin/c++   -std=gnu++20 -o CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o -c /home/oios/projects/FLACHEAD/src/ui/Canvas.cpp",
   "file": "/home/oios/projects/FLACHEAD/src/ui/Canvas.cpp",
   "output": "CMakeFiles/FLACHEAD.dir/src/ui/Canvas.cpp.o"
+},
+{
+  "directory": "/home/oios/projects/FLACHEAD/build",
+  "command": "/usr/sbin/c++   -std=gnu++20 -o CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.o -c /home/oios/projects/FLACHEAD/src/screens/HomeScreen.cpp",
+  "file": "/home/oios/projects/FLACHEAD/src/screens/HomeScreen.cpp",
+  "output": "CMakeFiles/FLACHEAD.dir/src/screens/HomeScreen.cpp.o"
 }
 ]
