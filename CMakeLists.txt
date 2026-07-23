@@ -13,6 +13,7 @@ add_executable(FLACHEAD
     src/app/Application.cpp
     src/system/Window.cpp
     src/core/Renderer.cpp
+    src/core/Time.cpp
     src/math/Color.cpp
     src/ui/Canvas.cpp
     src/screens/HomeScreen.cpp

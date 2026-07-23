@@ -1,6 +1,7 @@
 // FLACHEAD - Application.cpp
 #include "Application.hpp"
 
+#include ".../core/Time.hpp"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -36,12 +37,20 @@ void Application::Run()
 {
     while (m_Running)
     {
+        Time::Update();
+        static float timer = 0.0f;
+        timer += Time::DeltaTime();
+
+        if (timer >= 1.0f)
+        {
+            std::cout << "FPS: " << Time::FPS() << '\n';
+            timer = 0.0f;
+        }
         m_Running = m_Window.PollEvents();
 
-        m_Renderer.BeginFrame();
-
         WindowSize size = m_Window.GetSize();
-        std::cout << size.width << " x " << size.height << '\r' << std::flush;
+
+        m_Renderer.BeginFrame();
 
         m_HomeScreen.Draw(
             *m_Canvas,
@@ -51,7 +60,7 @@ void Application::Run()
 
         m_Renderer.EndFrame();
 
-        SDL_Delay(16);
+        SDL_Delay(1);
     }
 }
 
