@@ -1,5 +1,8 @@
 #include "Button.hpp"
 
+#include "Canvas.hpp"
+#include "../math/Color.hpp"
+
 namespace flachead::ui
 {
 void Button::SetText(std::string_view text)
@@ -23,5 +26,16 @@ void Button::Click()
     {
         m_ClickHandler();
     }
+}
+
+void Button::Draw(Canvas& canvas)
+{
+    if (!Visible())
+    {
+        return;
+    }
+
+    canvas.FillRect(Bounds(), Color::White);
+    canvas.DrawRect(Bounds(), Color::Black);
 }
 } // namespace flachead::ui

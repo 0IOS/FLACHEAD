@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL3 REQUIRED CONFIG)
 find_package(SDL3_ttf REQUIRED CONFIG)
+find_package(SDL3_image QUIET CONFIG)
 
 add_executable(FLACHEAD
     src/main.cpp
@@ -67,3 +68,7 @@ target_link_libraries(FLACHEAD PRIVATE
     SDL3::SDL3 
     SDL3_ttf::SDL3_ttf
 )
+
+if(TARGET SDL3_image::SDL3_image)
+    target_link_libraries(FLACHEAD PRIVATE SDL3_image::SDL3_image)
+endif()

@@ -1,5 +1,7 @@
 #include "Renderer.hpp"
 
+#include <string>
+
 namespace flachead::core
 {
 Renderer::Renderer()
@@ -53,5 +55,31 @@ void Renderer::FillRect(const Rect& rect)
 {
     SDL_FRect sdlRect{rect.position.x, rect.position.y, rect.size.x, rect.size.y};
     SDL_RenderFillRect(m_Renderer, &sdlRect);
+}
+
+void Renderer::DrawText(const Rect& rect, std::string_view text, const flachead::graphics::Font& font, const Color& color)
+{
+    if (!m_Renderer || !font.Valid() || text.empty())
+    {
+        return;
+    }
+
+    const std::string textString{text};
+    SDL_Color sdlColor{color.r, color.g, color.b, color.a};
+    SDL_Surface* surface = TTF_RenderText_Blended(font.Native(), textString.c_str(), textString.size(), sdlColor);
+    if (!surface)
+    {
+        return;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
+    if (texture)
+    {
+        SDL_FRect dstRect{rect.position.x, rect.position.y, rect.size.x, rect.size.y};
+        SDL_RenderTexture(m_Renderer, texture, nullptr, &dstRect);
+        SDL_DestroyTexture(texture);
+    }
+
+    SDL_DestroySurface(surface);
 }
 } // namespace flachead::core

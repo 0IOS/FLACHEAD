@@ -12,6 +12,7 @@ class Font
 {
 public:
     Font() = default;
+    explicit Font(std::string_view path);
     Font(std::string_view path, float size);
     ~Font();
 

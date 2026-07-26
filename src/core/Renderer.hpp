@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../graphics/Font.hpp"
 #include "../math/Color.hpp"
 #include "../math/Rect.hpp"
 #include <SDL3/SDL.h>
+#include <string_view>
 
 namespace flachead::core
 {
@@ -22,6 +24,7 @@ public:
 
     void DrawRect(const Rect& rect);
     void FillRect(const Rect& rect);
+    void DrawText(const Rect& rect, std::string_view text, const flachead::graphics::Font& font, const Color& color);
 
 private:
     SDL_Renderer* m_Renderer{nullptr};

@@ -18,6 +18,8 @@ public:
     void SetClickHandler(ClickHandler handler);
     void Click();
 
+    void Draw(Canvas& canvas) override;
+
 private:
     std::string m_Text;
     ClickHandler m_ClickHandler;

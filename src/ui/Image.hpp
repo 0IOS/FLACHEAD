@@ -11,6 +11,8 @@ public:
     explicit Image(std::shared_ptr<flachead::graphics::Sprite> sprite = nullptr);
     void SetSprite(std::shared_ptr<flachead::graphics::Sprite> sprite);
 
+    void Draw(Canvas& canvas) override;
+
 private:
     std::shared_ptr<flachead::graphics::Sprite> m_Sprite;
 };

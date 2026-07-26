@@ -3,6 +3,11 @@
 namespace flachead::graphics
 {
 
+Font::Font(std::string_view path)
+{
+    Load(path, m_Size);
+}
+
 Font::Font(std::string_view path, float size)
 {
     Load(path, size);
@@ -17,10 +22,11 @@ bool Font::Load(std::string_view path, float size)
 {
     Release();
 
-    m_Path = path;
+    const std::string pathString(path);
+    m_Path = pathString;
     m_Size = size;
 
-    m_Font = TTF_OpenFont(path.data(), size);
+    m_Font = TTF_OpenFont(pathString.c_str(), static_cast<int>(size));
 
     return m_Font != nullptr;
 }

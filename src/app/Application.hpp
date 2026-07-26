@@ -6,6 +6,7 @@
 #include "../core/Logger.hpp"
 #include "../core/Renderer.hpp"
 #include "../filesystem/FileSystem.hpp"
+#include "../graphics/FontManager.hpp"
 #include "../input/InputManager.hpp"
 #include "../screens/HomeScreen.hpp"
 #include "../screens/ScreenManager.hpp"
@@ -29,6 +30,7 @@ public:
 private:
     flachead::system::Window m_Window;
     flachead::core::Renderer m_Renderer;
+    flachead::graphics::FontManager m_FontManager;
     flachead::ui::Canvas* m_Canvas{nullptr};
     HomeScreen m_HomeScreen;
     flachead::app::AppManager m_AppManager;
