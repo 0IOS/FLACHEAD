@@ -223,7 +223,22 @@ void Renderer::DrawText(const Rect& rect, std::string_view text, const flachead:
     SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
     if (texture)
     {
-        SDL_FRect dstRect{rect.position.x, rect.position.y, rect.size.x, rect.size.y};
+        float w = static_cast<float>(surface->w);
+        float h = static_cast<float>(surface->h);
+
+        if (rect.size.y > 0.0f)
+        {
+            float scaleY = rect.size.y / h;
+            float scale = scaleY;
+            if (rect.size.x > 0.0f && w * scale > rect.size.x)
+            {
+                scale = rect.size.x / w;
+            }
+            w *= scale;
+            h *= scale;
+        }
+
+        SDL_FRect dstRect{rect.position.x, rect.position.y, w, h};
         SDL_RenderTexture(m_Renderer, texture, nullptr, &dstRect);
         SDL_DestroyTexture(texture);
     }
