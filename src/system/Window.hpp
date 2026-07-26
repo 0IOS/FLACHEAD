@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL.h>
 
+#include <functional>
+
 namespace flachead::system
 {
 struct WindowSize
@@ -19,7 +21,7 @@ public:
     bool Create();
     void Destroy();
 
-    bool PollEvents();
+    bool PollEvents(const std::function<bool(const SDL_Event&)>& handler = {});
 
     SDL_Window* GetNativeWindow() const;
     WindowSize GetSize() const;

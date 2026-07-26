@@ -44,6 +44,22 @@ void ScreenManager::Clear()
     }
 }
 
+void ScreenManager::Update(float deltaSeconds)
+{
+    if (auto* screen = Current())
+    {
+        screen->OnUpdate(deltaSeconds);
+    }
+}
+
+void ScreenManager::Render(flachead::ui::Canvas& canvas, int width, int height)
+{
+    if (auto* screen = Current())
+    {
+        screen->Render(canvas, width, height);
+    }
+}
+
 Screen* ScreenManager::Current() const
 {
     if (m_Stack.empty())

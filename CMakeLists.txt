@@ -63,6 +63,7 @@ add_executable(FLACHEAD
     src/views/SongInfoWidget.cpp
     src/views/ProgressWidget.cpp
     src/views/BottomBarWidget.cpp
+    src/apps/AppScreens.cpp
     src/resource/ResourceManager.cpp
     src/models/SongModel.cpp
     src/models/AlbumModel.cpp

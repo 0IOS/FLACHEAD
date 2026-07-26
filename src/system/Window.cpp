@@ -52,12 +52,17 @@ void Window::Destroy()
     SDL_Quit();
 }
 
-bool Window::PollEvents()
+bool Window::PollEvents(const std::function<bool(const SDL_Event&)>& handler)
 {
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
     {
+        if (handler && handler(event))
+        {
+            continue;
+        }
+
         switch (event.type)
         {
             case SDL_EVENT_QUIT:

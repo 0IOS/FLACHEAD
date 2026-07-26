@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../ui/Canvas.hpp"
+#include <SDL3/SDL.h>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -14,6 +17,8 @@ public:
     virtual void OnEnter() {}
     virtual void OnExit() {}
     virtual void OnUpdate(float) {}
+    virtual void Render(flachead::ui::Canvas& canvas, int width, int height) {}
+    virtual bool HandleEvent(const SDL_Event& event) { return false; }
 };
 
 class ScreenManager
@@ -27,6 +32,8 @@ public:
     void Pop();
     void Clear();
     Screen* Current() const;
+    void Update(float deltaSeconds);
+    void Render(flachead::ui::Canvas& canvas, int width, int height);
 
 private:
     std::unordered_map<std::string, std::unique_ptr<Screen>> m_Screens;
