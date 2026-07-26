@@ -46,6 +46,7 @@ bool Application::Initialize()
     }
 
     m_ThemeManager.Load("default");
+    m_Resources.Initialize();
     m_AppManager.Initialize();
     m_AudioService.Initialize();
     m_Canvas = new flachead::ui::Canvas(m_Renderer, m_FontManager, m_ThemeManager);
@@ -92,6 +93,7 @@ void Application::Shutdown()
 
     m_AudioService.Shutdown();
     m_AppManager.Shutdown();
+    m_Resources.Shutdown();
     m_Renderer.Destroy();
     m_Window.Destroy();
     delete m_Canvas;

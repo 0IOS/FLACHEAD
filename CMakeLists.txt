@@ -63,6 +63,14 @@ add_executable(FLACHEAD
     src/views/SongInfoWidget.cpp
     src/views/ProgressWidget.cpp
     src/views/BottomBarWidget.cpp
+    src/resource/ResourceManager.cpp
+    src/models/SongModel.cpp
+    src/models/AlbumModel.cpp
+    src/models/ArtistModel.cpp
+    src/models/PlaylistModel.cpp
+    src/models/LibraryModel.cpp
+    src/models/BatteryStateModel.cpp
+    src/models/SettingsModel.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE 
     SDL3::SDL3 

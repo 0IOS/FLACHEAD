@@ -11,6 +11,9 @@
 #include "../screens/HomeScreen.hpp"
 #include "../screens/ScreenManager.hpp"
 #include "../services/BatteryManager.hpp"
+#include "../resource/ResourceManager.hpp"
+#include "../models/BatteryStateModel.hpp"
+#include "../models/SettingsModel.hpp"
 #include "../services/SettingsManager.hpp"
 #include "../services/StorageManager.hpp"
 #include "../system/Window.hpp"
@@ -36,6 +39,9 @@ private:
     flachead::app::AppManager m_AppManager;
     flachead::screens::ScreenManager m_ScreenManager;
     flachead::theme::ThemeManager m_ThemeManager;
+    flachead::resource::ResourceManager m_Resources;
+    flachead::models::BatteryStateModel m_BatteryState;
+    flachead::models::SettingsModel m_Settings;
     flachead::input::InputManager m_InputManager;
     flachead::audio::AudioService m_AudioService;
     flachead::filesystem::FileSystem m_FileSystem;
