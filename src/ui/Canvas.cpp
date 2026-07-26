@@ -1,6 +1,8 @@
 #include "Canvas.hpp"
 
-Canvas::Canvas(Renderer& renderer)
+namespace flachead::ui
+{
+Canvas::Canvas(flachead::core::Renderer& renderer)
     : m_Renderer(renderer)
 {
 }
@@ -16,3 +18,4 @@ void Canvas::DrawRect(const Rect& rect, const Color& color)
     m_Renderer.SetColor(color);
     m_Renderer.DrawRect(rect);
 }
+} // namespace flachead::ui

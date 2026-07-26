@@ -4,34 +4,12 @@
 #include "../layout/LayoutMetrics.hpp"
 #include "../math/Color.hpp"
 
-void HomeScreen::Draw(
-    Canvas& canvas,
-    int windowWidth,
-    int windowHeight)
+void HomeScreen::Draw(flachead::ui::Canvas& canvas, int windowWidth, int windowHeight)
 {
-    LayoutMetrics metrics =
-        Layout::Calculate(
-            windowWidth,
-            windowHeight
-        );
+    const LayoutMetrics metrics = flachead::layout::Calculate(windowWidth, windowHeight);
 
-    canvas.DrawRect(
-        Layout::AlbumArt(metrics),
-        Color::White
-    );
-
-    canvas.DrawRect(
-        Layout::SongInfo(metrics),
-        Color::White
-    );
-
-    canvas.DrawRect(
-        Layout::ProgressBar(metrics),
-        Color::White
-    );
-
-    canvas.DrawRect(
-        Layout::BottomBar(metrics),
-        Color::White
-    );
+    canvas.DrawRect(flachead::layout::AlbumArt(metrics), Color::White);
+    canvas.DrawRect(flachead::layout::SongInfo(metrics), Color::White);
+    canvas.DrawRect(flachead::layout::ProgressBar(metrics), Color::White);
+    canvas.DrawRect(flachead::layout::BottomBar(metrics), Color::White);
 }

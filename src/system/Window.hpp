@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL.h>
 
+namespace flachead::system
+{
 struct WindowSize
 {
     int width;
@@ -23,5 +25,6 @@ public:
     WindowSize GetSize() const;
 
 private:
-    SDL_Window* m_Window;
+    SDL_Window* m_Window{nullptr};
 };
+} // namespace flachead::system

@@ -1,8 +1,11 @@
 #pragma once
+
 #include "../math/Color.hpp"
 #include "../math/Rect.hpp"
 #include <SDL3/SDL.h>
 
+namespace flachead::core
+{
 class Renderer
 {
 public:
@@ -21,5 +24,6 @@ public:
     void FillRect(const Rect& rect);
 
 private:
-    SDL_Renderer* m_Renderer;
+    SDL_Renderer* m_Renderer{nullptr};
 };
+} // namespace flachead::core

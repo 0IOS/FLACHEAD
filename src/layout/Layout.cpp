@@ -1,80 +1,58 @@
 #include "Layout.hpp"
 
-namespace Layout
+namespace flachead::layout
 {
-
-LayoutMetrics Calculate(
-    int windowWidth,
-    int windowHeight)
+LayoutMetrics Calculate(int windowWidth, int windowHeight)
 {
-    LayoutMetrics m;
+    LayoutMetrics metrics{};
+    metrics.windowWidth = static_cast<float>(windowWidth);
+    metrics.windowHeight = static_cast<float>(windowHeight);
+    metrics.padding = windowWidth * 0.04f;
+    metrics.albumSize = windowWidth * 0.45f;
 
-    m.windowWidth = static_cast<float>(windowWidth);
-    m.windowHeight = static_cast<float>(windowHeight);
+    const float maxAlbum = windowHeight * 0.55f;
+    if (metrics.albumSize > maxAlbum)
+    {
+        metrics.albumSize = maxAlbum;
+    }
 
-    m.padding = windowWidth * 0.04f;
+    metrics.songHeight = metrics.albumSize * 0.18f;
+    metrics.progressHeight = metrics.albumSize * 0.04f;
+    if (metrics.progressHeight < 6.0f)
+    {
+        metrics.progressHeight = 6.0f;
+    }
 
-    m.albumSize = windowWidth * 0.45f;
-
-    float maxAlbum = windowHeight * 0.55f;
-
-    if (m.albumSize > maxAlbum)
-        m.albumSize = maxAlbum;
-
-    m.songHeight = m.albumSize * 0.18f;
-
-    m.progressHeight = m.albumSize * 0.04f;
-
-    if (m.progressHeight < 6.0f)
-        m.progressHeight = 6.0f;
-
-    m.bottomBarHeight = windowHeight * 0.10f;
-
-    return m;
+    metrics.bottomBarHeight = windowHeight * 0.10f;
+    return metrics;
 }
 
-Rect AlbumArt(const LayoutMetrics& m)
+Rect AlbumArt(const LayoutMetrics& metrics)
 {
-    return Rect(
-        (m.windowWidth - m.albumSize) / 2.0f,
-        m.padding,
-        m.albumSize,
-        m.albumSize
-    );
+    return Rect((metrics.windowWidth - metrics.albumSize) / 2.0f,
+                metrics.padding,
+                metrics.albumSize,
+                metrics.albumSize);
 }
 
-Rect SongInfo(const LayoutMetrics& m)
+Rect SongInfo(const LayoutMetrics& metrics)
 {
-    return Rect(
-        (m.windowWidth - m.albumSize) / 2.0f,
-        m.padding + m.albumSize + m.padding,
-        m.albumSize,
-        m.songHeight
-    );
+    return Rect((metrics.windowWidth - metrics.albumSize) / 2.0f,
+                metrics.padding + metrics.albumSize + metrics.padding,
+                metrics.albumSize,
+                metrics.songHeight);
 }
 
-Rect ProgressBar(const LayoutMetrics& m)
+Rect ProgressBar(const LayoutMetrics& metrics)
 {
-    return Rect(
-        (m.windowWidth - m.albumSize) / 2.0f,
-        m.padding +
-        m.albumSize +
-        m.padding +
-        m.songHeight +
-        m.padding,
-        m.albumSize,
-        m.progressHeight
-    );
+    return Rect((metrics.windowWidth - metrics.albumSize) / 2.0f,
+                metrics.padding + metrics.albumSize + metrics.padding + metrics.songHeight + metrics.padding,
+                metrics.albumSize,
+                metrics.progressHeight);
 }
 
-Rect BottomBar(const LayoutMetrics& m)
+Rect BottomBar(const LayoutMetrics& metrics)
 {
-    return Rect(
-        0,
-        m.windowHeight - m.bottomBarHeight,
-        m.windowWidth,
-        m.bottomBarHeight
-    );
+    return Rect(0.0f, metrics.windowHeight - metrics.bottomBarHeight, metrics.windowWidth, metrics.bottomBarHeight);
 }
-
-}
+} // namespace flachead::layout

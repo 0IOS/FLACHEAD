@@ -1,16 +1,47 @@
 #pragma once
 
-#include "../math/Color.hpp"
+#include <string>
+#include <string_view>
 
-namespace Colors
+namespace flachead::theme
 {
-    inline const Color Background(20,20,20);
+struct ColorPalette
+{
+    std::string primary;
+    std::string secondary;
+    std::string background;
+    std::string foreground;
+};
 
-    inline const Color Surface(35,35,35);
+struct Spacing
+{
+    float base{8.0f};
+    float small{4.0f};
+    float large{16.0f};
+};
 
-    inline const Color Primary(255,255,255);
+struct Typography
+{
+    float titleSize{28.0f};
+    float bodySize{18.0f};
+};
 
-    inline const Color Secondary(180,180,180);
+class Theme
+{
+public:
+    Theme() = default;
 
-    inline const Color Accent(255,255,255);
-}
+    void SetPalette(const ColorPalette& palette);
+    void SetSpacing(const Spacing& spacing);
+    void SetTypography(const Typography& typography);
+
+    const ColorPalette& Palette() const;
+    const Spacing& SpacingValues() const;
+    const Typography& TypographyValues() const;
+
+private:
+    ColorPalette m_Palette;
+    Spacing m_Spacing;
+    Typography m_Typography;
+};
+} // namespace flachead::theme

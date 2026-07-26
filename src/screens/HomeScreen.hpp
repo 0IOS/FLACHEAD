@@ -5,9 +5,5 @@
 class HomeScreen
 {
 public:
-    void Draw(
-        Canvas& canvas,
-        int windowWidth,
-        int windowHeight
-    );
+    void Draw(flachead::ui::Canvas& canvas, int windowWidth, int windowHeight);
 };

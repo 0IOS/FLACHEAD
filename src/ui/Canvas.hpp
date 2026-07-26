@@ -4,14 +4,17 @@
 #include "../math/Color.hpp"
 #include "../math/Rect.hpp"
 
+namespace flachead::ui
+{
 class Canvas
 {
 public:
-    explicit Canvas(Renderer& renderer);
+    explicit Canvas(flachead::core::Renderer& renderer);
 
     void FillRect(const Rect& rect, const Color& color);
     void DrawRect(const Rect& rect, const Color& color);
 
 private:
-    Renderer& m_Renderer;
+    flachead::core::Renderer& m_Renderer;
 };
+} // namespace flachead::ui

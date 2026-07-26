@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+namespace flachead::system
+{
 Window::Window()
     : m_Window(nullptr)
 {
@@ -25,8 +27,7 @@ bool Window::Create()
         "FLACHEAD",
         900,
         600,
-        SDL_WINDOW_RESIZABLE
-    );
+        SDL_WINDOW_RESIZABLE);
 
     if (!m_Window)
     {
@@ -77,10 +78,11 @@ WindowSize Window::GetSize() const
 
     SDL_GetWindowSize(m_Window, &width, &height);
 
-    return { width, height };
+    return {width, height};
 }
 
 SDL_Window* Window::GetNativeWindow() const
 {
     return m_Window;
 }
+} // namespace flachead::system
