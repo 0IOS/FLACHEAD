@@ -1,15 +1,15 @@
 #include "HomeScreen.hpp"
 
-#include "../layout/Layout.hpp"
-#include "../layout/LayoutMetrics.hpp"
-#include "../math/Color.hpp"
-
-void HomeScreen::Draw(flachead::ui::Canvas& canvas, int windowWidth, int windowHeight)
+void HomeScreen::Draw(
+    flachead::ui::Canvas& canvas,
+    int width,
+    int height)
 {
-    const LayoutMetrics metrics = flachead::layout::Calculate(windowWidth, windowHeight);
+    m_AlbumArt.Draw(canvas,width,height);
 
-    canvas.DrawRect(flachead::layout::AlbumArt(metrics), Color::White);
-    canvas.DrawRect(flachead::layout::SongInfo(metrics), Color::White);
-    canvas.DrawRect(flachead::layout::ProgressBar(metrics), Color::White);
-    canvas.DrawRect(flachead::layout::BottomBar(metrics), Color::White);
+    m_SongInfo.Draw(canvas,width,height);
+
+    m_Progress.Draw(canvas,width,height);
+
+    m_BottomBar.Draw(canvas,width,height);
 }

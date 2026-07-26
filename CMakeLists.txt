@@ -57,5 +57,9 @@ add_executable(FLACHEAD
     src/ui/Slider.cpp
     src/ui/Toast.cpp
     src/ui/Widget.cpp
+    src/views/AlbumArtWidget.cpp
+    src/views/SongInfoWidget.cpp
+    src/views/ProgressWidget.cpp
+    src/views/BottomBarWidget.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE SDL3::SDL3)
