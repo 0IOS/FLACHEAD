@@ -2,6 +2,7 @@
 
 namespace flachead::ui
 {
+
 void Widget::SetId(std::string_view id)
 {
     m_Id = id;
@@ -21,4 +22,25 @@ bool Widget::Enabled() const
 {
     return m_Enabled;
 }
-} // namespace flachead::ui
+
+void Widget::SetBounds(const Rect& bounds)
+{
+    m_Bounds = bounds;
+}
+
+const Rect& Widget::Bounds() const
+{
+    return m_Bounds;
+}
+
+void Widget::SetVisible(bool visible)
+{
+    m_Visible = visible;
+}
+
+bool Widget::Visible() const
+{
+    return m_Visible;
+}
+
+}

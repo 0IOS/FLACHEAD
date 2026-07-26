@@ -2,6 +2,7 @@
 
 #include "../core/Time.hpp"
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include <iostream>
 
@@ -25,6 +26,14 @@ Application::~Application()
 bool Application::Initialize()
 {
     flachead::core::Logger::Info("Starting FLACHEAD engine");
+
+    std::cout << "Starting FLACHEAD...\n";
+
+    if (!TTF_Init())
+    {
+        std::cerr << "Failed to initialize SDL_ttf\n";
+        return false;
+    }
 
     if (!m_Window.Create())
     {
@@ -88,4 +97,5 @@ void Application::Shutdown()
     delete m_Canvas;
     m_Canvas = nullptr;
     m_Running = false;
+    TTF_Quit();
 }

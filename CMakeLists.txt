@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL3 REQUIRED CONFIG)
+find_package(SDL3_ttf REQUIRED CONFIG)
 
 add_executable(FLACHEAD
     src/main.cpp
@@ -36,7 +37,7 @@ add_executable(FLACHEAD
     src/services/SettingsManager.cpp
     src/services/StorageManager.cpp
     src/system/Window.cpp
-    src/theme/ThemeManager.cpp
+    src/ui/theme/ThemeManager.cpp
     src/ui/Button.cpp
     src/ui/Canvas.cpp
     src/ui/Card.cpp
@@ -62,4 +63,7 @@ add_executable(FLACHEAD
     src/views/ProgressWidget.cpp
     src/views/BottomBarWidget.cpp
 )
-target_link_libraries(FLACHEAD PRIVATE SDL3::SDL3)
+target_link_libraries(FLACHEAD PRIVATE 
+    SDL3::SDL3 
+    SDL3_ttf::SDL3_ttf
+)

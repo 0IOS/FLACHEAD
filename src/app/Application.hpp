@@ -13,7 +13,7 @@
 #include "../services/SettingsManager.hpp"
 #include "../services/StorageManager.hpp"
 #include "../system/Window.hpp"
-#include "../theme/ThemeManager.hpp"
+#include "../ui/theme/ThemeManager.hpp"
 #include "../ui/Canvas.hpp"
 
 class Application

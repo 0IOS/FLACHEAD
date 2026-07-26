@@ -2,10 +2,10 @@
 
 #include "../ui/Canvas.hpp"
 
-#include "../components/AlbumArtWidget.hpp"
-#include "../components/SongInfoWidget.hpp"
-#include "../components/ProgressWidget.hpp"
-#include "../components/BottomBarWidget.hpp"
+#include "../views/AlbumArtWidget.hpp"
+#include "../views/SongInfoWidget.hpp"
+#include "../views/ProgressWidget.hpp"
+#include "../views/BottomBarWidget.hpp"
 
 class HomeScreen
 {
