@@ -19,20 +19,13 @@ Color ParseColor(std::string_view value)
     const auto parseByte = [](char high, char low) -> uint8_t {
         auto toValue = [](char c) -> uint8_t {
             if (c >= '0' && c <= '9')
-            {
                 return static_cast<uint8_t>(c - '0');
-            }
             if (c >= 'a' && c <= 'f')
-            {
                 return static_cast<uint8_t>(10 + c - 'a');
-            }
             if (c >= 'A' && c <= 'F')
-            {
                 return static_cast<uint8_t>(10 + c - 'A');
-            }
             return 0;
         };
-
         return static_cast<uint8_t>((toValue(high) << 4) | toValue(low));
     };
 
@@ -42,6 +35,9 @@ Color ParseColor(std::string_view value)
         parseByte(value[5], value[6]),
         255};
 }
+
+constexpr std::string_view kFallbackFont = "/usr/share/fonts/google-noto-vf/NotoSans[wght].ttf";
+constexpr std::string_view kSystemFont   = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
 } // namespace
 
 Canvas::Canvas(flachead::core::Renderer& renderer,
@@ -51,6 +47,19 @@ Canvas::Canvas(flachead::core::Renderer& renderer,
       m_FontManager(fontManager),
       m_ThemeManager(themeManager)
 {
+}
+
+const std::string& Canvas::FontPath() const
+{
+    if (m_CachedFontPath.empty())
+    {
+        const std::string_view themeFont = m_ThemeManager.Get("font");
+        if (!themeFont.empty())
+            m_CachedFontPath = std::string{themeFont};
+        else
+            m_CachedFontPath = std::string{kFallbackFont};
+    }
+    return m_CachedFontPath;
 }
 
 void Canvas::FillRect(const Rect& rect, const Color& color)
@@ -65,26 +74,60 @@ void Canvas::DrawRect(const Rect& rect, const Color& color)
     m_Renderer.DrawRect(rect);
 }
 
+void Canvas::FillRoundedRect(const Rect& rect, float radius, const Color& color)
+{
+    m_Renderer.SetColor(color);
+    m_Renderer.FillRoundedRect(rect, radius);
+}
+
+void Canvas::DrawRoundedRect(const Rect& rect, float radius, const Color& color)
+{
+    m_Renderer.SetColor(color);
+    m_Renderer.DrawRoundedRect(rect, radius);
+}
+
+void Canvas::DrawLine(float x1, float y1, float x2, float y2, const Color& color)
+{
+    m_Renderer.SetColor(color);
+    m_Renderer.DrawLine(x1, y1, x2, y2);
+}
+
+void Canvas::FillCircle(float cx, float cy, float radius, const Color& color)
+{
+    m_Renderer.SetColor(color);
+    m_Renderer.FillCircle(cx, cy, radius);
+}
+
+void Canvas::DrawCircle(float cx, float cy, float radius, const Color& color)
+{
+    m_Renderer.SetColor(color);
+    m_Renderer.DrawCircle(cx, cy, radius);
+}
+
 void Canvas::DrawText(const Rect& rect, std::string_view text, const Color& color, float fontSize)
 {
-    const std::string fontPath = std::string{m_ThemeManager.Get("font")};
-    auto font = m_FontManager.Acquire(fontPath.empty() ? "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" : fontPath);
+    const std::string& fontPath = FontPath();
+
+    auto font = std::make_shared<flachead::graphics::Font>(
+        fontPath.empty() ? kSystemFont : std::string_view{fontPath}, fontSize);
+
     if (!font || !font->Valid())
     {
-        return;
+        // Fallback to system font
+        font = std::make_shared<flachead::graphics::Font>(kSystemFont, fontSize);
     }
 
-    if (fontSize > 0.0f)
+    if (font && font->Valid())
     {
-        auto fallback = std::make_shared<flachead::graphics::Font>(fontPath.empty() ? std::string_view{"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"} : std::string_view{fontPath}, fontSize);
-        if (fallback->Valid())
-        {
-            m_Renderer.DrawText(rect, text, *fallback, color);
-            return;
-        }
+        m_Renderer.DrawText(rect, text, *font, color);
     }
+}
 
-    m_Renderer.DrawText(rect, text, *font, color);
+void Canvas::DrawTextCentered(const Rect& rect, std::string_view text, const Color& color, float fontSize)
+{
+    // For now, delegate to DrawText — true centering requires TTF_GetStringSize
+    // which we'd need per-call. For the UI we generally position carefully anyway.
+    DrawText(rect, text, color, fontSize);
 }
 
 Color Canvas::ThemeColor(std::string_view key, const Color& fallback) const
@@ -94,7 +137,6 @@ Color Canvas::ThemeColor(std::string_view key, const Color& fallback) const
     {
         return fallback;
     }
-
     return ParseColor(themeValue);
 }
 } // namespace flachead::ui

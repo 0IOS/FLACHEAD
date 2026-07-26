@@ -24,9 +24,18 @@ public:
 
     void DrawRect(const Rect& rect);
     void FillRect(const Rect& rect);
+    void FillRoundedRect(const Rect& rect, float radius);
+    void DrawRoundedRect(const Rect& rect, float radius);
+    void DrawLine(float x1, float y1, float x2, float y2);
+    void FillCircle(float cx, float cy, float radius);
+    void DrawCircle(float cx, float cy, float radius);
     void DrawText(const Rect& rect, std::string_view text, const flachead::graphics::Font& font, const Color& color);
 
+    SDL_Renderer* GetSDLRenderer() const { return m_Renderer; }
+
 private:
+    void RenderCirclePoints(int cx, int cy, int x, int y, bool fill);
+
     SDL_Renderer* m_Renderer{nullptr};
 };
 } // namespace flachead::core
