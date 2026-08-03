@@ -31,6 +31,7 @@ add_executable(FLACHEAD
     src/core/PathUtils.cpp
     src/core/Renderer.cpp
     src/core/Time.cpp
+    src/database/Database.cpp
     src/events/EventBus.cpp
     src/filesystem/FileSystem.cpp
     src/graphics/Font.cpp
@@ -87,8 +88,25 @@ add_executable(FLACHEAD
 target_link_libraries(FLACHEAD PRIVATE 
     SDL3::SDL3 
     SDL3_ttf::SDL3_ttf
+    sqlite3
 )
 
 if(TARGET SDL3_image::SDL3_image)
     target_link_libraries(FLACHEAD PRIVATE SDL3_image::SDL3_image)
+endif()
+
+option(FLACHEAD_BUILD_TESTS "Build the FLACHEAD test suite" OFF)
+
+if(FLACHEAD_BUILD_TESTS)
+    enable_testing()
+    add_executable(flachead_tests
+        tests/test_database.cpp
+        src/database/Database.cpp
+        src/core/Logger.cpp
+        src/core/PathUtils.cpp
+        src/events/EventBus.cpp
+    )
+    target_link_libraries(flachead_tests PRIVATE sqlite3)
+    target_compile_features(flachead_tests PRIVATE cxx_std_20)
+    add_test(NAME flachead_tests COMMAND flachead_tests)
 endif()
