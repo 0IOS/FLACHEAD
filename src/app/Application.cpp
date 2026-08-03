@@ -13,8 +13,12 @@
 namespace
 {
 constexpr float kFpsSampleSeconds = 1.0f;
-constexpr float kTargetFrameMs    = 16.666f;
-constexpr int   kIdleWaitMs       = 50;
+constexpr float kIdleWaitMs       = 50;
+constexpr int   kFrameTierFloor   = 30;
+constexpr float kFrameEmaAlpha    = 0.1f;
+constexpr float kTierDegradeRatio = 1.10f;
+constexpr float kTierPromoteRatio = 0.75f;
+constexpr int   kTierStability    = 30;
 } // namespace
 
 Application::Application(float benchmarkSeconds)
@@ -194,6 +198,34 @@ void Application::RenderFrame(int width, int height)
     m_Renderer.EndFrame();
 }
 
+void Application::UpdateFrameTier(float renderMs)
+{
+    if (renderMs > 0.0f)
+    {
+        m_FrameTimeEma = m_FrameTimeEma * (1.0f - kFrameEmaAlpha) + renderMs * kFrameEmaAlpha;
+    }
+
+    const float budget = 1000.0f / static_cast<float>(m_FrameTier);
+    const bool degrade = m_FrameTier > kFrameTierFloor && m_FrameTimeEma > budget * kTierDegradeRatio;
+
+    const int nextTier = (m_FrameTier == kFrameTierFloor) ? 45 : 60;
+    const bool promote = m_FrameTier < 60 && m_FrameTimeEma < (1000.0f / static_cast<float>(nextTier)) * kTierPromoteRatio;
+
+    if (degrade || promote)
+    {
+        if (++m_TierStabilityFrames >= kTierStability)
+        {
+            m_TierStabilityFrames = 0;
+            m_FrameTier = degrade ? ((m_FrameTier == 60) ? 45 : kFrameTierFloor) : nextTier;
+            flachead::core::Logger::Info("Adaptive frame tier: " + std::to_string(m_FrameTier) + " FPS");
+        }
+    }
+    else
+    {
+        m_TierStabilityFrames = 0;
+    }
+}
+
 void Application::Run()
 {
     const Uint64 performanceFrequency = SDL_GetPerformanceFrequency();
@@ -234,6 +266,11 @@ void Application::Run()
         m_ScreenManager.Update(deltaSeconds);
 
         const bool handled = m_Window.PollEvents([this](const SDL_Event& event) {
+            if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_TERMINATING)
+            {
+                m_Running = false;
+                return true;
+            }
             if (auto* screen = m_ScreenManager.Current())
             {
                 return screen->HandleEvent(event);
@@ -252,7 +289,11 @@ void Application::Run()
 
         if (handled || resized || minuteChanged || m_ScreenManager.NeedsRender() || m_BenchmarkSeconds > 0.0f)
         {
+            const Uint64 renderStart = SDL_GetPerformanceCounter();
             RenderFrame(size.width, size.height);
+            const Uint64 renderEnd = SDL_GetPerformanceCounter();
+            const float renderMs = static_cast<float>(renderEnd - renderStart) * 1000.0f
+                                   / static_cast<float>(performanceFrequency);
 
             ++m_FramesThisSecond;
             ++m_FrameCount;
@@ -263,9 +304,15 @@ void Application::Run()
                 m_WorstFrameMs = frameMs;
             }
 
+            if (m_BenchmarkSeconds <= 0.0f)
+            {
+                UpdateFrameTier(renderMs);
+            }
+
+            const float targetMs = 1000.0f / static_cast<float>(m_FrameTier);
             const Uint64 now = SDL_GetPerformanceCounter();
             const Uint64 elapsed = now - lastFrameCounter;
-            const Uint64 target = static_cast<Uint64>(kTargetFrameMs * 0.001f * static_cast<float>(performanceFrequency));
+            const Uint64 target = static_cast<Uint64>(targetMs * 0.001f * static_cast<float>(performanceFrequency));
             if (elapsed < target)
             {
                 SDL_Delay(static_cast<int>((target - elapsed) * 1000 / performanceFrequency));

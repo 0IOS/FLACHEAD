@@ -36,6 +36,7 @@ public:
 private:
     void RegisterScreens();
     void RenderFrame(int width, int height);
+    void UpdateFrameTier(float renderMs);
 
     flachead::system::Window m_Window;
     flachead::core::Renderer m_Renderer;
@@ -63,6 +64,10 @@ private:
     float m_WorstFrameMs{0.0f};
     float m_TotalFrameMs{0.0f};
     std::uint32_t m_FrameCount{0};
+
+    std::uint32_t m_FrameTier{60};
+    float m_FrameTimeEma{0.0f};
+    int m_TierStabilityFrames{0};
 
     bool m_Running{false};
 };

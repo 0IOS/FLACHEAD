@@ -73,9 +73,11 @@ Notes:
 ## TODO (next runs)
 
 - Repeat measurements on the actual Raspberry Pi Zero W (software renderer,
-  1 GHz single core) and fill in Pi-specific rows.
-- Measure playback CPU once the audio backend decodes FLAC.
-- Measure per-screen FPS: `--benchmark` currently forces the launcher.
+  1 GHz single core) and fill in Pi-specific rows. `--benchmark` forces the
+  60 FPS tier; also record which adaptive tier (60/45/30) the launcher and
+  each app screen settle on in normal mode.
+- Measure playback CPU once the libmpv backend decodes FLAC.
+- Measure per-screen FPS in normal (adaptive) mode.
 
 ## Change log
 

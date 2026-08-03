@@ -44,11 +44,19 @@ numbers. The rules below are non-negotiable:
   - gallery: only during fullscreen transitions
   - notes: only while the cursor is visible (3 Hz blink)
   - power: only while a countdown runs
-- Rendering is capped at 60 FPS (`SDL_Delay` to a 16.6 ms budget).
+- Rendering is capped at 60 FPS (`SDL_Delay` to the current tier's frame
+  budget).
+- **Adaptive frame tier.** The loop measures pure render time (exclusive of the
+  cap delay) and feeds a 0.1-alpha EMA. If the EMA exceeds the current tier's
+  budget by 10% for 30 consecutive frames, the target steps down 60 → 45 → 30
+  FPS; if it stays under the next tier's budget by 25% for 30 frames, it steps
+  back up. The 30 FPS floor matches the hard minimum requirement. The tier only
+  changes while actively rendering — the idle path is unaffected.
+  `--benchmark` forces the 60 FPS tier so runs stay comparable.
 - A clock changes once a minute; the status bar redraw is triggered by minute
   change, not by per-frame polling.
-- `--benchmark[=seconds]` forces continuous rendering and prints a report
-  (avg/min/max FPS, frame times) at exit.
+- `--benchmark[=seconds]` forces continuous rendering at the 60 FPS tier and
+  prints a report (avg/min/max FPS, frame times) at exit.
 
 ## Memory
 
@@ -64,10 +72,29 @@ numbers. The rules below are non-negotiable:
 
 ## Threading
 
-- Everything runs on the main thread today; SDL audio (when a backend is
-  attached) runs on SDL's own thread and must never be blocked by the UI.
+- Everything runs on the main thread today; the audio backend (when attached)
+  runs on its own threads and must never be blocked by the UI.
 - Heavy work (library scans, album-art decode) must move to worker threads
   before it is added; never scan storage during playback.
+
+## Audio backend (`audio::`)
+
+- `audio::AudioService` owns an `audio::AudioBackend` and forwards all media
+  operations. The UI must only ever talk to `AudioService`.
+- The production backend is **libmpv** (FLAC decode, gapless playback, video
+  sync, subtitles). `audio::NullBackend` satisfies the interface today so the
+  app builds and runs without an audio library; the seam is:
+  `OpenMedia/Play/Pause/Stop/Seek/SetVolume/GetPositionSeconds/IsPlaying`.
+- Backend contract: methods return in milliseconds, decoding/IO happens on the
+  backend's own threads, volume is linear 0.0–1.0, and the render loop must
+  never block on a backend call. A `libmpv` backend must not be added until
+  this contract is met.
+
+## Shutdown
+
+- `SDL_EVENT_QUIT` (window close) and `SDL_EVENT_TERMINATING` (SIGTERM, as
+  sent by systemd) both stop the main loop, run `Shutdown()` and flush logs.
+  The app never exits by dying to a signal.
 
 ## Boot
 
