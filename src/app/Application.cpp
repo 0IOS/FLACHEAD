@@ -51,6 +51,7 @@ Application::Application(float benchmarkSeconds, std::string_view inputBackend)
     : m_Animator([this](float) {
           // The engine animator is available for future screen and widget transitions.
       }),
+      m_AudioService(m_EventBus),
       m_BenchmarkSeconds(benchmarkSeconds)
 {
     if (inputBackend == "gpio")

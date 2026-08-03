@@ -27,6 +27,8 @@ add_executable(FLACHEAD
     src/animation/AnimationPlayer.cpp
     src/animation/Tween.cpp
     src/audio/AudioService.cpp
+    src/audio/MpvBackend.cpp
+    src/audio/NullBackend.cpp
     src/core/Logger.cpp
     src/core/PathUtils.cpp
     src/core/Renderer.cpp
@@ -94,6 +96,7 @@ target_link_libraries(FLACHEAD PRIVATE
     SDL3_ttf::SDL3_ttf
     sqlite3
 )
+target_include_directories(FLACHEAD PRIVATE third_party/mpv/include)
 
 if(TARGET SDL3_image::SDL3_image)
     target_link_libraries(FLACHEAD PRIVATE SDL3_image::SDL3_image)
@@ -122,4 +125,17 @@ if(FLACHEAD_BUILD_TESTS)
     target_link_libraries(flachead_test_metadata PRIVATE sqlite3)
     target_compile_features(flachead_test_metadata PRIVATE cxx_std_20)
     add_test(NAME flachead_test_metadata COMMAND flachead_test_metadata)
+
+    add_executable(flachead_test_audio
+        tests/test_audio.cpp
+        src/audio/AudioService.cpp
+        src/audio/MpvBackend.cpp
+        src/audio/NullBackend.cpp
+        src/core/Logger.cpp
+        src/events/EventBus.cpp
+    )
+    target_include_directories(flachead_test_audio PRIVATE third_party/mpv/include)
+    target_link_libraries(flachead_test_audio PRIVATE ${CMAKE_DL_LIBS})
+    target_compile_features(flachead_test_audio PRIVATE cxx_std_20)
+    add_test(NAME flachead_test_audio COMMAND flachead_test_audio)
 endif()

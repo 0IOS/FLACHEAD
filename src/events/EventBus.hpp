@@ -19,6 +19,7 @@ enum class Type
     PlaybackStopped,
     PlaybackFinished,
     TrackChanged,
+    TrackLoaded,
     TrackProgress,
     PlaybackError,
     VolumeChanged,

@@ -5,6 +5,7 @@
 #include "../audio/AudioService.hpp"
 #include "../core/Logger.hpp"
 #include "../core/Renderer.hpp"
+#include "../events/EventBus.hpp"
 #include "../filesystem/FileSystem.hpp"
 #include "../graphics/FontManager.hpp"
 #include "../input/GpioInputBackend.hpp"
@@ -53,6 +54,7 @@ private:
     flachead::models::SettingsModel m_Settings;
     flachead::input::InputBackend* m_InputBackend{nullptr};
     std::unique_ptr<flachead::input::InputBackend> m_OwnedInputBackend;
+    flachead::events::EventBus m_EventBus;
     flachead::audio::AudioService m_AudioService;
     flachead::filesystem::FileSystem m_FileSystem;
     flachead::services::SettingsManager m_SettingsManager;
