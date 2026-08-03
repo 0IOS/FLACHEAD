@@ -9,7 +9,7 @@ void SettingsManager::Set(std::string_view key, std::string_view value)
 
 std::string SettingsManager::Get(std::string_view key) const
 {
-    auto it = m_Settings.find(std::string{key});
+    auto it = m_Settings.find(key);
     if (it != m_Settings.end())
     {
         return it->second;

@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cctype>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
-#include <iomanip>
 #include <sstream>
 #include <vector>
 
@@ -19,15 +19,14 @@ namespace
 constexpr float kStatusH = 38.0f;
 constexpr float kHeaderH = 42.0f;
 
-std::string FormatTime(float seconds)
+const char* const kMonthNames[] = {"January", "February", "March", "April", "May", "June",
+                                   "July", "August", "September", "October", "November", "December"};
+
+void FormatTime(char* buffer, size_t bufferSize, float seconds)
 {
-    int totalSec = std::max(0, static_cast<int>(seconds));
-    int mins = totalSec / 60;
-    int secs = totalSec % 60;
-    std::ostringstream ss;
-    ss << std::setfill('0') << std::setw(2) << mins << ":"
-       << std::setfill('0') << std::setw(2) << secs;
-    return ss.str();
+    const int totalSec = std::max(0, static_cast<int>(seconds));
+    const int minutes  = std::min(totalSec / 60, 9999);
+    std::snprintf(buffer, bufferSize, "%02d:%02d", minutes, totalSec % 60);
 }
 } // namespace
 
@@ -147,6 +146,11 @@ void MusicScreen::OnEnter()
     m_EqualizerBars.fill(0.4f);
 }
 
+bool MusicScreen::NeedsRender() const
+{
+    return m_Playing;
+}
+
 void MusicScreen::OnUpdate(float deltaSeconds)
 {
     m_PulseAnim += deltaSeconds;
@@ -247,6 +251,16 @@ void MusicScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 
     const Track& track = m_Tracks[m_SelectedTrack];
 
+    const int labelSec = static_cast<int>(m_ElapsedSeconds);
+    if (labelSec != m_LabelSecond)
+    {
+        FormatTime(m_ElapsedLabel, sizeof(m_ElapsedLabel), static_cast<float>(labelSec));
+        const int remSec    = std::max(0, static_cast<int>(track.durationSec) - labelSec);
+        const int remMinute = std::min(remSec / 60, 9999);
+        std::snprintf(m_RemainLabel, sizeof(m_RemainLabel), "-%02d:%02d", remMinute, remSec % 60);
+        m_LabelSecond = labelSec;
+    }
+
     // Left Album Art Panel
     const Rect artRect{24.0f, 92.0f, 170.0f, 170.0f};
     DrawVinylArtwork(canvas, artRect, m_Spin, m_Playing, track);
@@ -282,9 +296,8 @@ void MusicScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
     canvas.FillCircle(progTrack.position.x + fillW, progTrack.position.y + 5.0f, 7.0f, Color::White);
 
     // Time indicators
-    canvas.DrawText(Rect{24.0f, progY + 14.0f, 80.0f, 18.0f}, FormatTime(m_ElapsedSeconds), Color::White, 14.0f);
-    const float remSec = track.durationSec - m_ElapsedSeconds;
-    canvas.DrawText(Rect{width - 104.0f, progY + 14.0f, 80.0f, 18.0f}, "-" + FormatTime(remSec), Color{148, 163, 184, 255}, 14.0f);
+    canvas.DrawText(Rect{24.0f, progY + 14.0f, 80.0f, 18.0f}, m_ElapsedLabel, Color::White, 14.0f);
+    canvas.DrawText(Rect{width - 104.0f, progY + 14.0f, 80.0f, 18.0f}, m_RemainLabel, Color{148, 163, 184, 255}, 14.0f);
 
     // Playback Controls Panel
     const Rect ctrlRect{24.0f, 318.0f, width - 48.0f, 54.0f};
@@ -388,6 +401,11 @@ void GalleryScreen::OnUpdate(float deltaSeconds)
     }
 }
 
+bool GalleryScreen::NeedsRender() const
+{
+    return m_FullscreenAnim > 0.0f && m_FullscreenAnim < 1.0f;
+}
+
 void GalleryScreen::DrawThumbnailPattern(flachead::ui::Canvas& canvas, const Rect& rect, const Photo& photo) const
 {
     canvas.FillRoundedRect(rect, 8.0f, photo.bg);
@@ -480,7 +498,10 @@ void GalleryScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
         const Rect detailsBar{fRect.position.x, fRect.position.y + fRect.size.y + 12.0f, fRect.size.x, 50.0f};
         canvas.FillRoundedRect(detailsBar, 6.0f, Color{18, 24, 36, 240});
         canvas.DrawText(Rect{detailsBar.position.x + 14.0f, detailsBar.position.y + 8.0f, 300.0f, 20.0f}, photo.title, Color::White, 16.0f);
-        canvas.DrawText(Rect{detailsBar.position.x + 14.0f, detailsBar.position.y + 28.0f, 300.0f, 16.0f}, photo.meta + " · " + photo.camera, Color{148, 163, 184, 255}, 13.0f);
+
+        char metaBuf[96];
+        std::snprintf(metaBuf, sizeof(metaBuf), "%s · %s", photo.meta.c_str(), photo.camera.c_str());
+        canvas.DrawText(Rect{detailsBar.position.x + 14.0f, detailsBar.position.y + 28.0f, 300.0f, 16.0f}, metaBuf, Color{148, 163, 184, 255}, 13.0f);
     }
 
     DrawFooterHints(canvas, width, height, m_Fullscreen ? "[ESC] Close Fullscreen  [ARROWS] Next Image" : "[ARROWS] Navigate  [ENTER] Fullscreen Preview  [ESC] Back");
@@ -570,6 +591,11 @@ void VideoScreen::OnUpdate(float deltaSeconds)
     }
 }
 
+bool VideoScreen::NeedsRender() const
+{
+    return m_Playing;
+}
+
 void VideoScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 {
     AppScreen::Render(canvas, width, height);
@@ -615,7 +641,16 @@ void VideoScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
     canvas.DrawRoundedRect(ctrlRect, 6.0f, Color{30, 38, 54, 255});
 
     canvas.DrawText(Rect{ctrlRect.position.x + 20.0f, ctrlRect.position.y + 14.0f, 30.0f, 20.0f}, m_Playing ? "▮▮" : "▶", Color::White, 16.0f);
-    canvas.DrawText(Rect{ctrlRect.position.x + 60.0f, ctrlRect.position.y + 15.0f, 200.0f, 18.0f}, FormatTime(m_ElapsedSeconds) + " / " + vid.durationStr, Color::White, 14.0f);
+
+    const int labelSec = static_cast<int>(m_ElapsedSeconds);
+    if (labelSec != m_LabelSecond)
+    {
+        char elapsed[8];
+        FormatTime(elapsed, sizeof(elapsed), static_cast<float>(labelSec));
+        std::snprintf(m_TimeLabel, sizeof(m_TimeLabel), "%s / %s", elapsed, vid.durationStr.c_str());
+        m_LabelSecond = labelSec;
+    }
+    canvas.DrawText(Rect{ctrlRect.position.x + 60.0f, ctrlRect.position.y + 15.0f, 200.0f, 18.0f}, m_TimeLabel, Color::White, 14.0f);
 
     // Video selection cards strip
     const float cardW = (width - 48.0f - 24.0f) / 3.0f;
@@ -910,15 +945,15 @@ void CalendarScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
     canvas.FillRoundedRect(monthHeader, 6.0f, Color{14, 18, 26, 255});
     canvas.DrawRoundedRect(monthHeader, 6.0f, Color{30, 38, 54, 255});
 
-    std::string monthNames[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-    std::string mTitle = monthNames[m_Month - 1] + " " + std::to_string(m_Year);
+    char mTitle[40];
+    std::snprintf(mTitle, sizeof(mTitle), "%s %d", kMonthNames[m_Month - 1], m_Year);
 
     canvas.DrawText(Rect{monthHeader.position.x + 16.0f, monthHeader.position.y + 11.0f, 20.0f, 20.0f}, "◀", Color{124, 58, 237, 255}, 16.0f);
     canvas.DrawText(Rect{monthHeader.position.x + 110.0f, monthHeader.position.y + 10.0f, 180.0f, 22.0f}, mTitle, Color::White, 18.0f);
     canvas.DrawText(Rect{monthHeader.position.x + monthHeader.size.x - 30.0f, monthHeader.position.y + 11.0f, 20.0f, 20.0f}, "▶", Color{124, 58, 237, 255}, 16.0f);
 
     // Weekday headers
-    const std::vector<std::string> days{"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"};
+    const char* const days[] = {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"};
     const float cellW = 48.0f;
     const float cellH = 34.0f;
     const float gap = 5.0f;
@@ -949,7 +984,9 @@ void CalendarScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
         canvas.FillRoundedRect(cRect, 4.0f, bg);
         canvas.DrawRoundedRect(cRect, 4.0f, border);
 
-        canvas.DrawText(Rect{cRect.position.x + 14.0f, cRect.position.y + 8.0f, 24.0f, 18.0f}, std::to_string(d), selected ? Color::White : Color{226, 232, 240, 255}, 14.0f);
+        char dayBuf[8];
+        std::snprintf(dayBuf, sizeof(dayBuf), "%d", d);
+        canvas.DrawText(Rect{cRect.position.x + 14.0f, cRect.position.y + 8.0f, 24.0f, 18.0f}, dayBuf, selected ? Color::White : Color{226, 232, 240, 255}, 14.0f);
 
         // Check if day has event
         for (const auto& ev : m_Events)
@@ -968,7 +1005,9 @@ void CalendarScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
     canvas.FillRoundedRect(agendaRect, 8.0f, Color{14, 18, 26, 255});
     canvas.DrawRoundedRect(agendaRect, 8.0f, Color{30, 38, 54, 255});
 
-    canvas.DrawText(Rect{agendaRect.position.x + 16.0f, agendaRect.position.y + 14.0f, 200.0f, 22.0f}, "Agenda • Day " + std::to_string(m_SelectedDay), Color::White, 17.0f);
+    char agendaBuf[48];
+    std::snprintf(agendaBuf, sizeof(agendaBuf), "Agenda • Day %d", m_SelectedDay);
+    canvas.DrawText(Rect{agendaRect.position.x + 16.0f, agendaRect.position.y + 14.0f, 200.0f, 22.0f}, agendaBuf, Color::White, 17.0f);
     canvas.DrawLine(agendaRect.position.x + 16.0f, agendaRect.position.y + 42.0f, agendaRect.position.x + agendaRect.size.x - 16.0f, agendaRect.position.y + 42.0f, Color{30, 36, 51, 255});
 
     float evY = agendaRect.position.y + 54.0f;
@@ -1050,6 +1089,11 @@ void NotesScreen::OnUpdate(float deltaSeconds)
     }
 }
 
+bool NotesScreen::NeedsRender() const
+{
+    return m_CursorVisible;
+}
+
 void NotesScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 {
     AppScreen::Render(canvas, width, height);
@@ -1083,14 +1127,22 @@ void NotesScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
     canvas.DrawLine(edRect.position.x + 16.0f, edRect.position.y + 38.0f, edRect.position.x + edRect.size.x - 16.0f, edRect.position.y + 38.0f, Color{30, 36, 51, 255});
 
     // Content multiline display
-    std::istringstream stream(doc.content);
-    std::string line;
+    const std::string& content = doc.content;
     float lineY = edRect.position.y + 48.0f;
     size_t charAccum = 0;
+    size_t start = 0;
     bool cursorDrawn = false;
+    const float lineLimit = edRect.position.y + edRect.size.y - 30.0f;
 
-    while (std::getline(stream, line))
+    while (start < content.size() && lineY <= lineLimit)
     {
+        size_t end = content.find('\n', start);
+        if (end == std::string::npos)
+        {
+            end = content.size();
+        }
+        const std::string_view line(content.data() + start, end - start);
+
         canvas.DrawText(Rect{edRect.position.x + 16.0f, lineY, edRect.size.x - 32.0f, 20.0f}, line, Color{241, 245, 249, 255}, 15.0f);
 
         // Blinking cursor calculation
@@ -1105,9 +1157,9 @@ void NotesScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
             cursorDrawn = true;
         }
 
-        charAccum += line.size() + 1; // plus newline
+        charAccum += line.size() + 1;
+        start = end + 1;
         lineY += 24.0f;
-        if (lineY > edRect.position.y + edRect.size.y - 30.0f) break;
     }
 
     if (!cursorDrawn && m_CursorVisible)
@@ -1223,7 +1275,9 @@ void SettingsScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
         else if (item.type == ItemType::Picker)
         {
             const std::string& opt = item.options[item.optionIdx];
-            canvas.DrawText(Rect{ctrlX + 20.0f, rect.position.y + 14.0f, 140.0f, 20.0f}, "◄ " + opt + " ►", Color{34, 211, 238, 255}, 14.0f);
+            char pickBuf[96];
+            std::snprintf(pickBuf, sizeof(pickBuf), "◄ %s ►", opt.c_str());
+            canvas.DrawText(Rect{ctrlX + 20.0f, rect.position.y + 14.0f, 140.0f, 20.0f}, pickBuf, Color{34, 211, 238, 255}, 14.0f);
         }
         else if (item.type == ItemType::Display)
         {
@@ -1334,7 +1388,13 @@ void FileBrowserScreen::Render(flachead::ui::Canvas& canvas, int width, int heig
     const Rect pathBar{24.0f, 92.0f, width - 48.0f, 38.0f};
     canvas.FillRoundedRect(pathBar, 6.0f, Color{14, 18, 26, 255});
     canvas.DrawRoundedRect(pathBar, 6.0f, Color{30, 38, 54, 255});
-    canvas.DrawText(Rect{pathBar.position.x + 14.0f, pathBar.position.y + 10.0f, pathBar.size.x - 28.0f, 20.0f}, "Path: " + m_CurrentPath, Color{34, 211, 238, 255}, 15.0f);
+
+    if (m_PathLabelCache != m_CurrentPath)
+    {
+        m_PathLabel = "Path: " + m_CurrentPath;
+        m_PathLabelCache = m_CurrentPath;
+    }
+    canvas.DrawText(Rect{pathBar.position.x + 14.0f, pathBar.position.y + 10.0f, pathBar.size.x - 28.0f, 20.0f}, m_PathLabel, Color{34, 211, 238, 255}, 15.0f);
 
     // Items List Table
     const auto it = m_FileSystem.find(m_CurrentPath);
@@ -1429,6 +1489,11 @@ void PowerScreen::OnUpdate(float deltaSeconds)
     }
 }
 
+bool PowerScreen::NeedsRender() const
+{
+    return m_Triggered;
+}
+
 void PowerScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 {
     AppScreen::Render(canvas, width, height);
@@ -1465,9 +1530,9 @@ void PowerScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 
         canvas.DrawText(Rect{modal.position.x + 30.0f, modal.position.y + 30.0f, modal.size.x - 60.0f, 28.0f}, m_TriggeredAction + " in progress", Color::White, 22.0f);
 
-        std::ostringstream ss;
-        ss << "Execution in " << std::fixed << std::setprecision(1) << m_Countdown << " seconds...";
-        canvas.DrawText(Rect{modal.position.x + 30.0f, modal.position.y + 75.0f, modal.size.x - 60.0f, 22.0f}, ss.str(), Color{34, 211, 238, 255}, 16.0f);
+        char cdBuf[64];
+        std::snprintf(cdBuf, sizeof(cdBuf), "Execution in %.1f seconds...", m_Countdown);
+        canvas.DrawText(Rect{modal.position.x + 30.0f, modal.position.y + 75.0f, modal.size.x - 60.0f, 22.0f}, cdBuf, Color{34, 211, 238, 255}, 16.0f);
         canvas.DrawText(Rect{modal.position.x + 30.0f, modal.position.y + 120.0f, modal.size.x - 60.0f, 20.0f}, "Press [ESC] to cancel", Color{148, 163, 184, 255}, 14.0f);
     }
 

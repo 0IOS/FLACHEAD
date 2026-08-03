@@ -14,19 +14,19 @@
 #include "../resource/ResourceManager.hpp"
 #include "../models/BatteryStateModel.hpp"
 #include "../models/SettingsModel.hpp"
-#include "../apps/AppScreens.hpp"
 #include "../services/SettingsManager.hpp"
 #include "../services/StorageManager.hpp"
 #include "../system/Window.hpp"
 #include "../ui/theme/ThemeManager.hpp"
 #include "../ui/Canvas.hpp"
 
+#include <cstdint>
 #include <memory>
 
 class Application
 {
 public:
-    Application();
+    explicit Application(float benchmarkSeconds = 0.0f);
     ~Application();
 
     bool Initialize();
@@ -34,20 +34,13 @@ public:
     void Shutdown();
 
 private:
+    void RegisterScreens();
+    void RenderFrame(int width, int height);
+
     flachead::system::Window m_Window;
     flachead::core::Renderer m_Renderer;
     flachead::graphics::FontManager m_FontManager;
     flachead::ui::Canvas* m_Canvas{nullptr};
-    std::unique_ptr<HomeScreen> m_LauncherScreen;
-    std::unique_ptr<flachead::apps::MusicScreen> m_MusicScreen;
-    std::unique_ptr<flachead::apps::GalleryScreen> m_GalleryScreen;
-    std::unique_ptr<flachead::apps::VideoScreen> m_VideoScreen;
-    std::unique_ptr<flachead::apps::CalculatorScreen> m_CalculatorScreen;
-    std::unique_ptr<flachead::apps::CalendarScreen> m_CalendarScreen;
-    std::unique_ptr<flachead::apps::NotesScreen> m_NotesScreen;
-    std::unique_ptr<flachead::apps::SettingsScreen> m_SettingsScreen;
-    std::unique_ptr<flachead::apps::FileBrowserScreen> m_FileBrowserScreen;
-    std::unique_ptr<flachead::apps::PowerScreen> m_PowerScreen;
     flachead::app::AppManager m_AppManager;
     flachead::screens::ScreenManager m_ScreenManager;
     flachead::theme::ThemeManager m_ThemeManager;
@@ -61,6 +54,15 @@ private:
     flachead::services::StorageManager m_StorageManager;
     flachead::services::BatteryManager m_BatteryManager;
     flachead::animation::Animator m_Animator;
+
+    float m_BenchmarkSeconds{0.0f};
+    float m_FpsAccumulator{0.0f};
+    std::uint32_t m_FramesThisSecond{0};
+    std::uint32_t m_MinFpsSecond{0xFFFFFFFFu};
+    std::uint32_t m_MaxFpsSecond{0};
+    float m_WorstFrameMs{0.0f};
+    float m_TotalFrameMs{0.0f};
+    std::uint32_t m_FrameCount{0};
 
     bool m_Running{false};
 };

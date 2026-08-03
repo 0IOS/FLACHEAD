@@ -4,7 +4,6 @@
 #include "../math/Rect.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <ctime>
 #include <string>
 
@@ -29,9 +28,12 @@ void HomeScreen::OnEnter()
 
 void HomeScreen::OnUpdate(float deltaSeconds)
 {
-    m_Pulse      += deltaSeconds * 4.0f;
-    m_EnterAnim   = std::min(1.0f, m_EnterAnim + deltaSeconds * 3.5f);
-    m_SelectAnim += deltaSeconds * 8.0f;
+    m_EnterAnim = std::min(1.0f, m_EnterAnim + deltaSeconds * 3.5f);
+}
+
+bool HomeScreen::NeedsRender() const
+{
+    return m_EnterAnim < 1.0f;
 }
 
 void HomeScreen::DrawStatusBar(flachead::ui::Canvas& canvas, int width)
@@ -66,13 +68,11 @@ void HomeScreen::DrawStatusBar(flachead::ui::Canvas& canvas, int width)
                     Color{5, 7, 12, 255}, 13.0f);
 }
 
-void HomeScreen::DrawAppGrid(flachead::ui::Canvas& canvas, int width, int height)
+void HomeScreen::DrawAppGrid(flachead::ui::Canvas& canvas, int width)
 {
     const int   count   = static_cast<int>(m_Apps.size());
-    const int   rows    = (count + kColumns - 1) / kColumns;
     const float gridW   = kColumns * kCardW + (kColumns - 1) * kCardGapX;
     const float startX  = (static_cast<float>(width) - gridW) * 0.5f;
-    const float easeIn  = m_EnterAnim * m_EnterAnim * (3.0f - 2.0f * m_EnterAnim); // smoothstep
 
     const Color accent    = Color{124, 58, 237, 255};
     const Color accentGlow= Color{124, 58, 237, 60};
@@ -97,12 +97,11 @@ void HomeScreen::DrawAppGrid(flachead::ui::Canvas& canvas, int width, int height
 
         const bool selected = idx == m_SelectedIndex;
 
-        // Glow behind selected card
+        // Selection halo
         if (selected)
         {
-            const float glow = 1.0f + 0.04f * std::sin(m_Pulse);
-            canvas.FillRoundedRect(Rect{cx - 8.0f * glow, cy - 8.0f * glow,
-                                        kCardW + 16.0f * glow, kCardH + 16.0f * glow},
+            canvas.FillRoundedRect(Rect{cx - 8.0f, cy - 8.0f,
+                                        kCardW + 16.0f, kCardH + 16.0f},
                                    14.0f, accentGlow);
         }
 
@@ -137,19 +136,11 @@ void HomeScreen::DrawAppGrid(flachead::ui::Canvas& canvas, int width, int height
 
 void HomeScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 {
-    // Background
     canvas.FillRect(Rect{0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)},
                     Color{5, 7, 12, 255});
 
-    // Subtle radial-ish gradient flair (two overlapping circles)
-    canvas.FillCircle(static_cast<float>(width) * 0.75f, 80.0f, 180.0f,
-                      Color{30, 10, 70, 60});
-    canvas.FillCircle(static_cast<float>(width) * 0.2f,
-                      static_cast<float>(height) - 60.0f, 140.0f,
-                      Color{10, 30, 60, 50});
-
     DrawStatusBar(canvas, width);
-    DrawAppGrid(canvas, width, height);
+    DrawAppGrid(canvas, width);
 
     // Bottom hint
     canvas.DrawText(Rect{0.0f, static_cast<float>(height) - 26.0f, static_cast<float>(width), 20.0f},
@@ -224,7 +215,6 @@ void HomeScreen::Select(int index)
     if (m_Apps.empty())
         return;
     m_SelectedIndex = std::clamp(index, 0, static_cast<int>(m_Apps.size() - 1));
-    m_SelectAnim = 0.0f;
 }
 
 void HomeScreen::ActivateSelection()

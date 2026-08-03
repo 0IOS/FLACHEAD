@@ -1,20 +1,27 @@
 #include "Application.hpp"
 
+#include "../apps/AppScreens.hpp"
 #include "../core/Time.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include <cmath>
+#include <cstdio>
+#include <ctime>
 #include <iostream>
 
 namespace
 {
 constexpr float kFpsSampleSeconds = 1.0f;
-}
+constexpr float kTargetFrameMs    = 16.666f;
+constexpr int   kIdleWaitMs       = 50;
+} // namespace
 
-Application::Application()
+Application::Application(float benchmarkSeconds)
     : m_Animator([this](float) {
           // The engine animator is available for future screen and widget transitions.
-      })
+      }),
+      m_BenchmarkSeconds(benchmarkSeconds)
 {
 }
 
@@ -51,97 +58,7 @@ bool Application::Initialize()
     m_AudioService.Initialize();
     m_Canvas = new flachead::ui::Canvas(m_Renderer, m_FontManager, m_ThemeManager);
 
-    m_LauncherScreen = std::make_unique<HomeScreen>();
-    m_MusicScreen = std::make_unique<flachead::apps::MusicScreen>();
-    m_GalleryScreen = std::make_unique<flachead::apps::GalleryScreen>();
-    m_VideoScreen = std::make_unique<flachead::apps::VideoScreen>();
-    m_CalculatorScreen = std::make_unique<flachead::apps::CalculatorScreen>();
-    m_CalendarScreen = std::make_unique<flachead::apps::CalendarScreen>();
-    m_NotesScreen = std::make_unique<flachead::apps::NotesScreen>();
-    m_SettingsScreen = std::make_unique<flachead::apps::SettingsScreen>();
-    m_FileBrowserScreen = std::make_unique<flachead::apps::FileBrowserScreen>();
-    m_PowerScreen = std::make_unique<flachead::apps::PowerScreen>();
-
-    m_LauncherScreen->SetLaunchHandler([this](std::string_view app) {
-        if (app == "Music")
-        {
-            m_ScreenManager.Push("music");
-        }
-        else if (app == "Gallery")
-        {
-            m_ScreenManager.Push("gallery");
-        }
-        else if (app == "Video")
-        {
-            m_ScreenManager.Push("video");
-        }
-        else if (app == "Calculator")
-        {
-            m_ScreenManager.Push("calculator");
-        }
-        else if (app == "Calendar")
-        {
-            m_ScreenManager.Push("calendar");
-        }
-        else if (app == "Notes")
-        {
-            m_ScreenManager.Push("notes");
-        }
-        else if (app == "Settings")
-        {
-            m_ScreenManager.Push("settings");
-        }
-        else if (app == "File Browser")
-        {
-            m_ScreenManager.Push("filebrowser");
-        }
-        else if (app == "Power")
-        {
-            m_ScreenManager.Push("power");
-        }
-    });
-    m_LauncherScreen->SetBackHandler([this] {
-        m_Running = false;
-    });
-
-    m_MusicScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_GalleryScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_VideoScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_CalculatorScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_CalendarScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_NotesScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_SettingsScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_FileBrowserScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-    m_PowerScreen->SetBackHandler([this] {
-        m_ScreenManager.Pop();
-    });
-
-    m_ScreenManager.Register("launcher", std::move(m_LauncherScreen));
-    m_ScreenManager.Register("music", std::move(m_MusicScreen));
-    m_ScreenManager.Register("gallery", std::move(m_GalleryScreen));
-    m_ScreenManager.Register("video", std::move(m_VideoScreen));
-    m_ScreenManager.Register("calculator", std::move(m_CalculatorScreen));
-    m_ScreenManager.Register("calendar", std::move(m_CalendarScreen));
-    m_ScreenManager.Register("notes", std::move(m_NotesScreen));
-    m_ScreenManager.Register("settings", std::move(m_SettingsScreen));
-    m_ScreenManager.Register("filebrowser", std::move(m_FileBrowserScreen));
-    m_ScreenManager.Register("power", std::move(m_PowerScreen));
+    RegisterScreens();
 
     m_ScreenManager.Push("launcher");
     m_Running = true;
@@ -149,26 +66,174 @@ bool Application::Initialize()
     return true;
 }
 
+void Application::RegisterScreens()
+{
+    m_ScreenManager.RegisterFactory("launcher", [this] {
+        auto screen = std::make_unique<HomeScreen>();
+        screen->SetLaunchHandler([this](std::string_view app) {
+            if (app == "Music")
+            {
+                m_ScreenManager.Push("music");
+            }
+            else if (app == "Gallery")
+            {
+                m_ScreenManager.Push("gallery");
+            }
+            else if (app == "Video")
+            {
+                m_ScreenManager.Push("video");
+            }
+            else if (app == "Calculator")
+            {
+                m_ScreenManager.Push("calculator");
+            }
+            else if (app == "Calendar")
+            {
+                m_ScreenManager.Push("calendar");
+            }
+            else if (app == "Notes")
+            {
+                m_ScreenManager.Push("notes");
+            }
+            else if (app == "Settings")
+            {
+                m_ScreenManager.Push("settings");
+            }
+            else if (app == "File Browser")
+            {
+                m_ScreenManager.Push("filebrowser");
+            }
+            else if (app == "Power")
+            {
+                m_ScreenManager.Push("power");
+            }
+        });
+        screen->SetBackHandler([this] {
+            m_Running = false;
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("music", [this] {
+        auto screen = std::make_unique<flachead::apps::MusicScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("gallery", [this] {
+        auto screen = std::make_unique<flachead::apps::GalleryScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("video", [this] {
+        auto screen = std::make_unique<flachead::apps::VideoScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("calculator", [this] {
+        auto screen = std::make_unique<flachead::apps::CalculatorScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("calendar", [this] {
+        auto screen = std::make_unique<flachead::apps::CalendarScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("notes", [this] {
+        auto screen = std::make_unique<flachead::apps::NotesScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("settings", [this] {
+        auto screen = std::make_unique<flachead::apps::SettingsScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("filebrowser", [this] {
+        auto screen = std::make_unique<flachead::apps::FileBrowserScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+
+    m_ScreenManager.RegisterFactory("power", [this] {
+        auto screen = std::make_unique<flachead::apps::PowerScreen>();
+        screen->SetBackHandler([this] {
+            m_ScreenManager.Pop();
+        });
+        return screen;
+    });
+}
+
+void Application::RenderFrame(int width, int height)
+{
+    m_Renderer.BeginFrame();
+    m_ScreenManager.Render(*m_Canvas, width, height);
+    m_Renderer.EndFrame();
+}
+
 void Application::Run()
 {
-    float fpsTimer = 0.0f;
+    const Uint64 performanceFrequency = SDL_GetPerformanceFrequency();
+    Uint64 lastFrameCounter = SDL_GetPerformanceCounter();
+    std::time_t lastMinute = std::time(nullptr) / 60;
+    int lastWidth = -1;
+    int lastHeight = -1;
 
     while (m_Running)
     {
         Time::Update();
         const float deltaSeconds = Time::DeltaTime();
-        fpsTimer += deltaSeconds;
 
-        if (fpsTimer >= kFpsSampleSeconds)
+        m_FpsAccumulator += deltaSeconds;
+        if (m_FpsAccumulator >= kFpsSampleSeconds)
         {
-            flachead::core::Logger::Debug(std::to_string(Time::FPS()));
-            fpsTimer = 0.0f;
+            if (m_BenchmarkSeconds > 0.0f)
+            {
+                if (m_FramesThisSecond < m_MinFpsSecond)
+                {
+                    m_MinFpsSecond = m_FramesThisSecond;
+                }
+                if (m_FramesThisSecond > m_MaxFpsSecond)
+                {
+                    m_MaxFpsSecond = m_FramesThisSecond;
+                }
+            }
+            else
+            {
+                flachead::core::Logger::Debug(std::to_string(Time::FPS()));
+            }
+            m_FpsAccumulator = 0.0f;
+            m_FramesThisSecond = 0;
         }
 
         m_Animator.Tick(deltaSeconds);
         m_AppManager.Tick(deltaSeconds);
         m_ScreenManager.Update(deltaSeconds);
-        m_Running = m_Window.PollEvents([this](const SDL_Event& event) {
+
+        const bool handled = m_Window.PollEvents([this](const SDL_Event& event) {
             if (auto* screen = m_ScreenManager.Current())
             {
                 return screen->HandleEvent(event);
@@ -177,11 +242,58 @@ void Application::Run()
         });
 
         const flachead::system::WindowSize size = m_Window.GetSize();
-        m_Renderer.BeginFrame();
-        m_ScreenManager.Render(*m_Canvas, size.width, size.height);
-        m_Renderer.EndFrame();
+        const bool resized = size.width != lastWidth || size.height != lastHeight;
+        lastWidth = size.width;
+        lastHeight = size.height;
 
-        SDL_Delay(1);
+        const std::time_t minute = std::time(nullptr) / 60;
+        const bool minuteChanged = minute != lastMinute;
+        lastMinute = minute;
+
+        if (handled || resized || minuteChanged || m_ScreenManager.NeedsRender() || m_BenchmarkSeconds > 0.0f)
+        {
+            RenderFrame(size.width, size.height);
+
+            ++m_FramesThisSecond;
+            ++m_FrameCount;
+            const float frameMs = deltaSeconds * 1000.0f;
+            m_TotalFrameMs += frameMs;
+            if (frameMs > m_WorstFrameMs)
+            {
+                m_WorstFrameMs = frameMs;
+            }
+
+            const Uint64 now = SDL_GetPerformanceCounter();
+            const Uint64 elapsed = now - lastFrameCounter;
+            const Uint64 target = static_cast<Uint64>(kTargetFrameMs * 0.001f * static_cast<float>(performanceFrequency));
+            if (elapsed < target)
+            {
+                SDL_Delay(static_cast<int>((target - elapsed) * 1000 / performanceFrequency));
+            }
+            lastFrameCounter = SDL_GetPerformanceCounter();
+        }
+        else
+        {
+            m_Window.WaitForEvent(kIdleWaitMs);
+        }
+
+        if (m_BenchmarkSeconds > 0.0f && m_FrameCount >= static_cast<std::uint32_t>(m_BenchmarkSeconds * 60.0f))
+        {
+            break;
+        }
+    }
+
+    if (m_BenchmarkSeconds > 0.0f && m_FrameCount > 0)
+    {
+        std::printf("=== FLACHEAD BENCHMARK ===\n");
+        std::printf("Duration        : %.1f s\n", m_BenchmarkSeconds);
+        std::printf("Frames rendered : %u\n", m_FrameCount);
+        std::printf("Average FPS     : %.1f\n", static_cast<float>(m_FrameCount) / m_BenchmarkSeconds);
+        std::printf("Min FPS (sec)   : %u\n", m_MinFpsSecond == 0xFFFFFFFFu ? 0 : m_MinFpsSecond);
+        std::printf("Max FPS (sec)   : %u\n", m_MaxFpsSecond);
+        std::printf("Avg frame time  : %.3f ms\n", m_TotalFrameMs / static_cast<float>(m_FrameCount));
+        std::printf("Worst frame     : %.3f ms\n", m_WorstFrameMs);
+        std::printf("==========================\n");
     }
 }
 
@@ -196,6 +308,7 @@ void Application::Shutdown()
     m_AppManager.Shutdown();
     m_Resources.Shutdown();
     m_Renderer.Destroy();
+    m_FontManager.ReleaseAll();
     m_Window.Destroy();
     delete m_Canvas;
     m_Canvas = nullptr;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include <functional>
+#include <map>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 namespace flachead::services
 {
@@ -13,6 +14,6 @@ public:
     std::string Get(std::string_view key) const;
 
 private:
-    std::unordered_map<std::string, std::string> m_Settings;
+    std::map<std::string, std::string, std::less<>> m_Settings;
 };
 } // namespace flachead::services

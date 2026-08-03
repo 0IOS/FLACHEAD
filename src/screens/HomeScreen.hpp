@@ -20,12 +20,13 @@ public:
     void OnUpdate(float deltaSeconds) override;
     void Render(flachead::ui::Canvas& canvas, int width, int height) override;
     bool HandleEvent(const SDL_Event& event) override;
+    bool NeedsRender() const override;
 
 private:
     void Select(int index);
     void ActivateSelection();
     void DrawStatusBar(flachead::ui::Canvas& canvas, int width);
-    void DrawAppGrid(flachead::ui::Canvas& canvas, int width, int height);
+    void DrawAppGrid(flachead::ui::Canvas& canvas, int width);
 
     struct AppEntry
     {
@@ -47,9 +48,7 @@ private:
     };
 
     int   m_SelectedIndex{0};
-    float m_Pulse{0.0f};
     float m_EnterAnim{0.0f};   // 0→1 on screen enter
-    float m_SelectAnim{0.0f};  // bounces on selection change
 
     LaunchHandler m_OnLaunch;
     BackHandler   m_OnBack;

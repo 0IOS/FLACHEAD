@@ -106,15 +106,15 @@ void Canvas::DrawCircle(float cx, float cy, float radius, const Color& color)
 
 void Canvas::DrawText(const Rect& rect, std::string_view text, const Color& color, float fontSize)
 {
-    const std::string& fontPath = FontPath();
-
-    auto font = std::make_shared<flachead::graphics::Font>(
-        fontPath.empty() ? kSystemFont : std::string_view{fontPath}, fontSize);
+    std::shared_ptr<flachead::graphics::Font> font;
+    if (const std::string& fontPath = FontPath(); !fontPath.empty())
+    {
+        font = m_FontManager.Acquire(fontPath, fontSize);
+    }
 
     if (!font || !font->Valid())
     {
-        // Fallback to system font
-        font = std::make_shared<flachead::graphics::Font>(kSystemFont, fontSize);
+        font = m_FontManager.Acquire(kSystemFont, fontSize);
     }
 
     if (font && font->Valid())

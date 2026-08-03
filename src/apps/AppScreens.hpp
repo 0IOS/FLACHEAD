@@ -54,6 +54,7 @@ public:
     void OnUpdate(float deltaSeconds) override;
     void Render(flachead::ui::Canvas& canvas, int width, int height) override;
     bool HandleEvent(const SDL_Event& event) override;
+    bool NeedsRender() const override;
 
 private:
     struct Track
@@ -89,6 +90,10 @@ private:
     bool  m_Shuffle{false};
     bool  m_Repeat{true};
     std::array<float, 16> m_EqualizerBars{};
+
+    char  m_ElapsedLabel[12]{};
+    char  m_RemainLabel[12]{};
+    int   m_LabelSecond{-1};
 };
 
 // ---------------------------------------------------------------------------
@@ -101,6 +106,7 @@ public:
     void OnUpdate(float deltaSeconds) override;
     void Render(flachead::ui::Canvas& canvas, int width, int height) override;
     bool HandleEvent(const SDL_Event& event) override;
+    bool NeedsRender() const override;
 
 private:
     struct Photo
@@ -140,6 +146,7 @@ public:
     void OnUpdate(float deltaSeconds) override;
     void Render(flachead::ui::Canvas& canvas, int width, int height) override;
     bool HandleEvent(const SDL_Event& event) override;
+    bool NeedsRender() const override;
 
 private:
     struct VideoItem
@@ -164,6 +171,9 @@ private:
     float m_ElapsedSeconds{38.5f};
     float m_AnimTimer{0.0f};
     float m_Volume{0.75f};
+
+    char  m_TimeLabel[32]{};
+    int   m_LabelSecond{-1};
 };
 
 // ---------------------------------------------------------------------------
@@ -246,6 +256,7 @@ public:
     void OnUpdate(float deltaSeconds) override;
     void Render(flachead::ui::Canvas& canvas, int width, int height) override;
     bool HandleEvent(const SDL_Event& event) override;
+    bool NeedsRender() const override;
 
 private:
     struct NoteDoc
@@ -370,6 +381,9 @@ private:
 
     int m_SelectedIndex{0};
     int m_ScrollOffset{0};
+
+    std::string m_PathLabel;
+    std::string m_PathLabelCache;
 };
 
 // ---------------------------------------------------------------------------
@@ -382,6 +396,7 @@ public:
     void OnUpdate(float deltaSeconds) override;
     void Render(flachead::ui::Canvas& canvas, int width, int height) override;
     bool HandleEvent(const SDL_Event& event) override;
+    bool NeedsRender() const override;
 
 private:
     struct Option

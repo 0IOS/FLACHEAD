@@ -1,5 +1,6 @@
 #include "FileSystem.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -13,7 +14,8 @@ bool FileSystem::Exists(std::string_view path) const
 
 bool FileSystem::IsDirectory(std::string_view path) const
 {
-    return false;
+    std::error_code ec;
+    return std::filesystem::is_directory(std::filesystem::path{path}, ec);
 }
 
 std::string FileSystem::ReadText(std::string_view path) const

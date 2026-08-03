@@ -76,6 +76,12 @@ bool Window::PollEvents(const std::function<bool(const SDL_Event&)>& handler)
     return true;
 }
 
+void Window::WaitForEvent(int timeoutMs)
+{
+    SDL_Event event;
+    SDL_WaitEventTimeout(&event, timeoutMs);
+}
+
 WindowSize Window::GetSize() const
 {
     int width = 0;

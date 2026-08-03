@@ -2,10 +2,31 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <string>
 
 namespace flachead::core
 {
+namespace
+{
+constexpr int   kTextCacheCap      = 256;
+constexpr int   kShapeCacheCap     = 32;
+constexpr int   kMaskMaxRadius     = 96;
+
+SDL_Surface* CreateMaskSurface(int size)
+{
+    return SDL_CreateSurface(size, size, SDL_PIXELFORMAT_RGBA8888);
+}
+
+void WriteMaskPixel(Uint8* base, Uint8 alpha)
+{
+    base[0] = 255;
+    base[1] = 255;
+    base[2] = 255;
+    base[3] = alpha;
+}
+} // namespace
+
 Renderer::Renderer()
     : m_Renderer(nullptr)
 {
@@ -28,11 +49,49 @@ bool Renderer::Create(SDL_Window* window)
 
 void Renderer::Destroy()
 {
-    if (m_Renderer)
+    if (!m_Renderer)
     {
-        SDL_DestroyRenderer(m_Renderer);
-        m_Renderer = nullptr;
+        return;
     }
+
+    for (const auto& [key, glyph] : m_TextCache)
+    {
+        (void)key;
+        SDL_DestroyTexture(glyph.texture);
+    }
+    m_TextCache.clear();
+    m_TextCacheOrder.clear();
+
+    for (const auto& [key, texture] : m_Corners)
+    {
+        (void)key;
+        SDL_DestroyTexture(texture);
+    }
+    m_Corners.clear();
+
+    for (const auto& [key, texture] : m_CornerOutlines)
+    {
+        (void)key;
+        SDL_DestroyTexture(texture);
+    }
+    m_CornerOutlines.clear();
+
+    for (const auto& [key, texture] : m_Discs)
+    {
+        (void)key;
+        SDL_DestroyTexture(texture);
+    }
+    m_Discs.clear();
+
+    for (const auto& [key, texture] : m_Rings)
+    {
+        (void)key;
+        SDL_DestroyTexture(texture);
+    }
+    m_Rings.clear();
+
+    SDL_DestroyRenderer(m_Renderer);
+    m_Renderer = nullptr;
 }
 
 void Renderer::BeginFrame()
@@ -48,6 +107,7 @@ void Renderer::EndFrame()
 
 void Renderer::SetColor(const Color& color)
 {
+    m_CurrentColor = color;
     SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
 }
 
@@ -68,67 +128,178 @@ void Renderer::DrawLine(float x1, float y1, float x2, float y2)
     SDL_RenderLine(m_Renderer, x1, y1, x2, y2);
 }
 
+void Renderer::PrepareShape(SDL_Texture* texture)
+{
+    SDL_SetTextureColorMod(texture, m_CurrentColor.r, m_CurrentColor.g, m_CurrentColor.b);
+    SDL_SetTextureAlphaMod(texture, m_CurrentColor.a);
+    SDL_SetTextureBlendMode(texture, m_CurrentColor.a == 255 ? SDL_BLENDMODE_NONE : SDL_BLENDMODE_BLEND);
+}
+
+void Renderer::BlitShape(SDL_Texture* texture, float x, float y, float w, float h)
+{
+    PrepareShape(texture);
+
+    SDL_FRect dst{x, y, w, h};
+    SDL_RenderTexture(m_Renderer, texture, nullptr, &dst);
+}
+
+SDL_Texture* Renderer::CornerTexture(int radius, bool outline)
+{
+    auto& cache = outline ? m_CornerOutlines : m_Corners;
+
+    auto it = cache.find(radius);
+    if (it != cache.end())
+    {
+        return it->second;
+    }
+
+    if (cache.size() >= kShapeCacheCap)
+    {
+        auto victim = cache.begin();
+        SDL_DestroyTexture(victim->second);
+        cache.erase(victim);
+    }
+
+    const int size = radius + 1;
+    SDL_Surface* surface = CreateMaskSurface(size);
+    const int bytesPerPixel = SDL_GetPixelFormatDetails(surface->format)->bytes_per_pixel;
+    Uint8* pixels = static_cast<Uint8*>(surface->pixels);
+    const int rr = radius * radius;
+
+    for (int j = 0; j < size; ++j)
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            const int dx = radius - i;
+            const int dy = radius - j;
+            const int dist2 = dx * dx + dy * dy;
+            Uint8 alpha = 0;
+            if (!outline)
+            {
+                alpha = dist2 <= rr ? 255 : 0;
+            }
+            else
+            {
+                const int dOuter = (radius + 1) * (radius + 1);
+                alpha = (dist2 <= dOuter && dist2 >= rr - 2 * radius) ? 255 : 0;
+            }
+            WriteMaskPixel(pixels + (j * surface->pitch + i * bytesPerPixel), alpha);
+        }
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
+    SDL_DestroySurface(surface);
+    cache.emplace(radius, texture);
+    return texture;
+}
+
+SDL_Texture* Renderer::DiscTexture(int radius, bool outline)
+{
+    auto& cache = outline ? m_Rings : m_Discs;
+
+    auto it = cache.find(radius);
+    if (it != cache.end())
+    {
+        return it->second;
+    }
+
+    if (cache.size() >= kShapeCacheCap)
+    {
+        auto victim = cache.begin();
+        SDL_DestroyTexture(victim->second);
+        cache.erase(victim);
+    }
+
+    const int size = 2 * radius + 1;
+    SDL_Surface* surface = CreateMaskSurface(size);
+    const int bytesPerPixel = SDL_GetPixelFormatDetails(surface->format)->bytes_per_pixel;
+    Uint8* pixels = static_cast<Uint8*>(surface->pixels);
+    const int rr = radius * radius;
+
+    for (int j = 0; j < size; ++j)
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            const int dx = i - radius;
+            const int dy = j - radius;
+            const int dist2 = dx * dx + dy * dy;
+            Uint8 alpha = 0;
+            if (!outline)
+            {
+                alpha = dist2 <= rr ? 255 : 0;
+            }
+            else
+            {
+                const int dOuter = (radius + 1) * (radius + 1);
+                alpha = (dist2 <= dOuter && dist2 >= rr - 2 * radius) ? 255 : 0;
+            }
+            WriteMaskPixel(pixels + (j * surface->pitch + i * bytesPerPixel), alpha);
+        }
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
+    SDL_DestroySurface(surface);
+    cache.emplace(radius, texture);
+    return texture;
+}
+
 void Renderer::FillRoundedRect(const Rect& rect, float radius)
 {
     if (!m_Renderer)
         return;
 
-    const float x = rect.position.x;
-    const float y = rect.position.y;
     const float w = rect.size.x;
     const float h = rect.size.y;
-    const float r = std::min(radius, std::min(w, h) * 0.5f);
+    const float clamped = std::min(radius, std::min(w, h) * 0.5f);
 
-    // Fill center column
-    SDL_FRect center{x, y + r, w, h - 2.0f * r};
+    if (clamped < 1.0f)
+    {
+        FillRect(rect);
+        return;
+    }
+
+    const int ri = static_cast<int>(clamped + 0.5f);
+    SDL_Texture* corner = CornerTexture(ri, false);
+
+    const int xi = static_cast<int>(rect.position.x + 0.5f);
+    const int yi = static_cast<int>(rect.position.y + 0.5f);
+    const int wi = std::max(2 * ri, static_cast<int>(w + 0.5f));
+    const int hi = std::max(2 * ri, static_cast<int>(h + 0.5f));
+
+    SDL_FRect center{static_cast<float>(xi + ri), static_cast<float>(yi + ri),
+                     static_cast<float>(wi - 2 * ri), static_cast<float>(hi - 2 * ri)};
     SDL_RenderFillRect(m_Renderer, &center);
 
-    // Fill top row (without corners)
-    SDL_FRect top{x + r, y, w - 2.0f * r, r};
+    SDL_FRect top{static_cast<float>(xi + ri), static_cast<float>(yi),
+                  static_cast<float>(wi - 2 * ri), static_cast<float>(ri)};
     SDL_RenderFillRect(m_Renderer, &top);
 
-    // Fill bottom row (without corners)
-    SDL_FRect bottom{x + r, y + h - r, w - 2.0f * r, r};
+    SDL_FRect bottom{static_cast<float>(xi + ri), static_cast<float>(yi + hi - ri),
+                     static_cast<float>(wi - 2 * ri), static_cast<float>(ri)};
     SDL_RenderFillRect(m_Renderer, &bottom);
 
-    // Fill corners using circles
-    const int ir = static_cast<int>(r);
-    const int cx0 = static_cast<int>(x + r);
-    const int cy0 = static_cast<int>(y + r);
-    const int cx1 = static_cast<int>(x + w - r);
-    const int cy1 = static_cast<int>(y + h - r);
+    SDL_FRect left{static_cast<float>(xi), static_cast<float>(yi + ri),
+                   static_cast<float>(ri), static_cast<float>(hi - 2 * ri)};
+    SDL_RenderFillRect(m_Renderer, &left);
 
-    for (int dy = 0; dy <= ir; ++dy)
-    {
-        const int dx = static_cast<int>(std::sqrt(static_cast<float>(ir * ir - dy * dy)));
-        SDL_FRect row0{static_cast<float>(cx0 - dx), static_cast<float>(cy0 - dy),
-                       static_cast<float>(2 * dx + 1), 1.0f};
-        SDL_RenderFillRect(m_Renderer, &row0);
+    SDL_FRect right{static_cast<float>(xi + wi - ri), static_cast<float>(yi + ri),
+                    static_cast<float>(ri), static_cast<float>(hi - 2 * ri)};
+    SDL_RenderFillRect(m_Renderer, &right);
 
-        SDL_FRect row1{static_cast<float>(cx0 - dx), static_cast<float>(cy0 - dy),
-                       static_cast<float>(dx + 1), 1.0f};
-        (void)row1;
+    const float cs = static_cast<float>(ri);
+    SDL_FRect tl{static_cast<float>(xi), static_cast<float>(yi), cs, cs};
+    PrepareShape(corner);
+    SDL_RenderTexture(m_Renderer, corner, nullptr, &tl);
 
-        // Top-left corner
-        SDL_FRect tl{static_cast<float>(cx0 - dx), static_cast<float>(cy0 - dy),
-                     static_cast<float>(dx + 1), 1.0f};
-        SDL_RenderFillRect(m_Renderer, &tl);
+    SDL_FRect tr{static_cast<float>(xi + wi - ri), static_cast<float>(yi), cs, cs};
+    SDL_RenderTextureRotated(m_Renderer, corner, nullptr, &tr, 0.0, nullptr, SDL_FLIP_HORIZONTAL);
 
-        // Top-right corner
-        SDL_FRect tr{static_cast<float>(cx1), static_cast<float>(cy0 - dy),
-                     static_cast<float>(dx + 1), 1.0f};
-        SDL_RenderFillRect(m_Renderer, &tr);
+    SDL_FRect bl{static_cast<float>(xi), static_cast<float>(yi + hi - ri), cs, cs};
+    SDL_RenderTextureRotated(m_Renderer, corner, nullptr, &bl, 0.0, nullptr, SDL_FLIP_VERTICAL);
 
-        // Bottom-left corner
-        SDL_FRect bl{static_cast<float>(cx0 - dx), static_cast<float>(cy1 + dy),
-                     static_cast<float>(dx + 1), 1.0f};
-        SDL_RenderFillRect(m_Renderer, &bl);
-
-        // Bottom-right corner
-        SDL_FRect br{static_cast<float>(cx1), static_cast<float>(cy1 + dy),
-                     static_cast<float>(dx + 1), 1.0f};
-        SDL_RenderFillRect(m_Renderer, &br);
-    }
+    SDL_FRect br{static_cast<float>(xi + wi - ri), static_cast<float>(yi + hi - ri), cs, cs};
+    SDL_RenderTextureRotated(m_Renderer, corner, nullptr, &br, 0.0, nullptr,
+                             static_cast<SDL_FlipMode>(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL));
 }
 
 void Renderer::DrawRoundedRect(const Rect& rect, float radius)
@@ -136,42 +307,47 @@ void Renderer::DrawRoundedRect(const Rect& rect, float radius)
     if (!m_Renderer)
         return;
 
-    const float x = rect.position.x;
-    const float y = rect.position.y;
     const float w = rect.size.x;
     const float h = rect.size.y;
-    const float r = std::min(radius, std::min(w, h) * 0.5f);
+    const float clamped = std::min(radius, std::min(w, h) * 0.5f);
 
-    // Four edges
-    SDL_RenderLine(m_Renderer, x + r, y, x + w - r, y);
-    SDL_RenderLine(m_Renderer, x + r, y + h, x + w - r, y + h);
-    SDL_RenderLine(m_Renderer, x, y + r, x, y + h - r);
-    SDL_RenderLine(m_Renderer, x + w, y + r, x + w, y + h - r);
-
-    // Corner arcs (approximate with lines)
-    const int steps = std::max(6, static_cast<int>(r * 0.5f));
-    for (int i = 0; i < steps; ++i)
+    if (clamped < 1.0f)
     {
-        const float a0 = static_cast<float>(i) / static_cast<float>(steps) * (3.14159f / 2.0f);
-        const float a1 = static_cast<float>(i + 1) / static_cast<float>(steps) * (3.14159f / 2.0f);
-
-        // Top-left
-        SDL_RenderLine(m_Renderer,
-                       x + r - std::cos(a0) * r, y + r - std::sin(a0) * r,
-                       x + r - std::cos(a1) * r, y + r - std::sin(a1) * r);
-        // Top-right
-        SDL_RenderLine(m_Renderer,
-                       x + w - r + std::sin(a0) * r, y + r - std::cos(a0) * r,
-                       x + w - r + std::sin(a1) * r, y + r - std::cos(a1) * r);
-        // Bottom-right
-        SDL_RenderLine(m_Renderer,
-                       x + w - r + std::cos(a0) * r, y + h - r + std::sin(a0) * r,
-                       x + w - r + std::cos(a1) * r, y + h - r + std::sin(a1) * r);
-        // Bottom-left
-        SDL_RenderLine(m_Renderer,
-                       x + r - std::sin(a0) * r, y + h - r + std::cos(a0) * r,
-                       x + r - std::sin(a1) * r, y + h - r + std::cos(a1) * r);
+        DrawRect(rect);
+        return;
     }
+
+    const int ri = static_cast<int>(clamped + 0.5f);
+    SDL_Texture* corner = CornerTexture(ri, true);
+
+    const int xi = static_cast<int>(rect.position.x + 0.5f);
+    const int yi = static_cast<int>(rect.position.y + 0.5f);
+    const int wi = std::max(2 * ri, static_cast<int>(w + 0.5f));
+    const int hi = std::max(2 * ri, static_cast<int>(h + 0.5f));
+
+    SDL_RenderLine(m_Renderer, static_cast<float>(xi + ri), static_cast<float>(yi),
+                   static_cast<float>(xi + wi - ri), static_cast<float>(yi));
+    SDL_RenderLine(m_Renderer, static_cast<float>(xi + ri), static_cast<float>(yi + hi),
+                   static_cast<float>(xi + wi - ri), static_cast<float>(yi + hi));
+    SDL_RenderLine(m_Renderer, static_cast<float>(xi), static_cast<float>(yi + ri),
+                   static_cast<float>(xi), static_cast<float>(yi + hi - ri));
+    SDL_RenderLine(m_Renderer, static_cast<float>(xi + wi), static_cast<float>(yi + ri),
+                   static_cast<float>(xi + wi), static_cast<float>(yi + hi - ri));
+
+    const float cs = static_cast<float>(ri);
+    SDL_FRect tl{static_cast<float>(xi), static_cast<float>(yi), cs, cs};
+    PrepareShape(corner);
+    SDL_RenderTexture(m_Renderer, corner, nullptr, &tl);
+
+    SDL_FRect tr{static_cast<float>(xi + wi - ri), static_cast<float>(yi), cs, cs};
+    SDL_RenderTextureRotated(m_Renderer, corner, nullptr, &tr, 0.0, nullptr, SDL_FLIP_HORIZONTAL);
+
+    SDL_FRect bl{static_cast<float>(xi), static_cast<float>(yi + hi - ri), cs, cs};
+    SDL_RenderTextureRotated(m_Renderer, corner, nullptr, &bl, 0.0, nullptr, SDL_FLIP_VERTICAL);
+
+    SDL_FRect br{static_cast<float>(xi + wi - ri), static_cast<float>(yi + hi - ri), cs, cs};
+    SDL_RenderTextureRotated(m_Renderer, corner, nullptr, &br, 0.0, nullptr,
+                             static_cast<SDL_FlipMode>(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL));
 }
 
 void Renderer::FillCircle(float cx, float cy, float radius)
@@ -179,14 +355,22 @@ void Renderer::FillCircle(float cx, float cy, float radius)
     if (!m_Renderer)
         return;
 
-    const int r = static_cast<int>(radius);
-    for (int dy = -r; dy <= r; ++dy)
+    const int ri = static_cast<int>(radius + 0.5f);
+    if (ri < 1 || ri > kMaskMaxRadius)
     {
-        const int dx = static_cast<int>(std::sqrt(static_cast<float>(r * r - dy * dy)));
-        SDL_FRect row{cx - static_cast<float>(dx), cy + static_cast<float>(dy),
-                      static_cast<float>(2 * dx + 1), 1.0f};
-        SDL_RenderFillRect(m_Renderer, &row);
+        for (int dy = -ri; dy <= ri; ++dy)
+        {
+            const int dx = static_cast<int>(std::sqrt(static_cast<float>(ri * ri - dy * dy)));
+            SDL_FRect row{cx - static_cast<float>(dx), cy + static_cast<float>(dy),
+                          static_cast<float>(2 * dx + 1), 1.0f};
+            SDL_RenderFillRect(m_Renderer, &row);
+        }
+        return;
     }
+
+    SDL_Texture* disc = DiscTexture(ri, false);
+    BlitShape(disc, cx - static_cast<float>(ri), cy - static_cast<float>(ri),
+              static_cast<float>(2 * ri + 1), static_cast<float>(2 * ri + 1));
 }
 
 void Renderer::DrawCircle(float cx, float cy, float radius)
@@ -194,15 +378,54 @@ void Renderer::DrawCircle(float cx, float cy, float radius)
     if (!m_Renderer)
         return;
 
-    const int steps = std::max(32, static_cast<int>(radius * 2.0f));
-    for (int i = 0; i < steps; ++i)
+    const int ri = static_cast<int>(radius + 0.5f);
+    if (ri < 1 || ri > kMaskMaxRadius)
     {
-        const float a0 = static_cast<float>(i) / static_cast<float>(steps) * 6.28318f;
-        const float a1 = static_cast<float>(i + 1) / static_cast<float>(steps) * 6.28318f;
-        SDL_RenderLine(m_Renderer,
-                       cx + std::cos(a0) * radius, cy + std::sin(a0) * radius,
-                       cx + std::cos(a1) * radius, cy + std::sin(a1) * radius);
+        const int steps = std::max(32, ri * 2);
+        for (int i = 0; i < steps; ++i)
+        {
+            const float a0 = static_cast<float>(i) / static_cast<float>(steps) * 6.28318f;
+            const float a1 = static_cast<float>(i + 1) / static_cast<float>(steps) * 6.28318f;
+            SDL_RenderLine(m_Renderer,
+                           cx + std::cos(a0) * radius, cy + std::sin(a0) * radius,
+                           cx + std::cos(a1) * radius, cy + std::sin(a1) * radius);
+        }
+        return;
     }
+
+    SDL_Texture* ring = DiscTexture(ri, true);
+    BlitShape(ring, cx - static_cast<float>(ri), cy - static_cast<float>(ri),
+              static_cast<float>(2 * ri + 1), static_cast<float>(2 * ri + 1));
+}
+
+uint64_t Renderer::TextHash(std::string_view text, const flachead::graphics::Font& font, const Color& color)
+{
+    const uint64_t fnv = 1099511628211ULL;
+    uint64_t hash = 1469598103934665603ULL;
+    const uint64_t seed = reinterpret_cast<uintptr_t>(font.Native());
+
+    for (int i = 0; i < 8; ++i)
+    {
+        hash ^= (seed >> (i * 8)) & 0xFF;
+        hash *= fnv;
+    }
+    hash ^= static_cast<uint64_t>(color.r);
+    hash *= fnv;
+    hash ^= static_cast<uint64_t>(color.g);
+    hash *= fnv;
+    hash ^= static_cast<uint64_t>(color.b);
+    hash *= fnv;
+    hash ^= static_cast<uint64_t>(color.a);
+    hash *= fnv;
+    hash ^= static_cast<uint64_t>(text.size());
+    hash *= fnv;
+
+    for (char byte : text)
+    {
+        hash ^= static_cast<uint8_t>(byte);
+        hash *= fnv;
+    }
+    return hash;
 }
 
 void Renderer::DrawText(const Rect& rect, std::string_view text, const flachead::graphics::Font& font, const Color& color)
@@ -212,37 +435,61 @@ void Renderer::DrawText(const Rect& rect, std::string_view text, const flachead:
         return;
     }
 
-    const std::string textString{text};
-    SDL_Color sdlColor{color.r, color.g, color.b, color.a};
-    SDL_Surface* surface = TTF_RenderText_Blended(font.Native(), textString.c_str(), textString.size(), sdlColor);
-    if (!surface)
+    const uint64_t key = TextHash(text, font, color);
+    TextGlyph glyph;
+
+    auto it = m_TextCache.find(key);
+    if (it != m_TextCache.end())
     {
-        return;
+        glyph = it->second;
     }
-
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
-    if (texture)
+    else
     {
-        float w = static_cast<float>(surface->w);
-        float h = static_cast<float>(surface->h);
-
-        if (rect.size.y > 0.0f)
+        SDL_Color sdlColor{color.r, color.g, color.b, color.a};
+        SDL_Surface* surface = TTF_RenderText_Blended(font.Native(), text.data(), text.size(), sdlColor);
+        if (!surface)
         {
-            float scaleY = rect.size.y / h;
-            float scale = scaleY;
-            if (rect.size.x > 0.0f && w * scale > rect.size.x)
-            {
-                scale = rect.size.x / w;
-            }
-            w *= scale;
-            h *= scale;
+            return;
         }
 
-        SDL_FRect dstRect{rect.position.x, rect.position.y, w, h};
-        SDL_RenderTexture(m_Renderer, texture, nullptr, &dstRect);
-        SDL_DestroyTexture(texture);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
+        if (texture)
+        {
+            glyph = {texture, surface->w, surface->h};
+            m_TextCache.emplace(key, glyph);
+            m_TextCacheOrder.push_back(key);
+
+            if (m_TextCache.size() > kTextCacheCap)
+            {
+                const uint64_t oldKey = m_TextCacheOrder.front();
+                m_TextCacheOrder.erase(m_TextCacheOrder.begin());
+                auto oldIt = m_TextCache.find(oldKey);
+                if (oldIt != m_TextCache.end())
+                {
+                    SDL_DestroyTexture(oldIt->second.texture);
+                    m_TextCache.erase(oldIt);
+                }
+            }
+        }
+
+        SDL_DestroySurface(surface);
     }
 
-    SDL_DestroySurface(surface);
+    float w = static_cast<float>(glyph.width);
+    float h = static_cast<float>(glyph.height);
+
+    if (rect.size.y > 0.0f)
+    {
+        float scale = rect.size.y / h;
+        if (rect.size.x > 0.0f && w * scale > rect.size.x)
+        {
+            scale = rect.size.x / w;
+        }
+        w *= scale;
+        h *= scale;
+    }
+
+    SDL_FRect dstRect{rect.position.x, rect.position.y, w, h};
+    SDL_RenderTexture(m_Renderer, glyph.texture, nullptr, &dstRect);
 }
 } // namespace flachead::core

@@ -2,16 +2,27 @@
 
 namespace flachead::graphics
 {
-std::shared_ptr<Font> FontManager::Acquire(std::string_view path)
+std::shared_ptr<Font> FontManager::Acquire(std::string_view path, float size)
 {
-    auto it = m_Cache.find(std::string{path});
-    if (it != m_Cache.end())
+    const int sizeKey = static_cast<int>(size);
+
+    auto pathIt = m_Cache.find(path);
+    if (pathIt != m_Cache.end())
     {
-        return it->second;
+        auto sizeIt = pathIt->second.find(sizeKey);
+        if (sizeIt != pathIt->second.end())
+        {
+            return sizeIt->second;
+        }
     }
 
-    auto font = std::make_shared<Font>(path);
-    m_Cache.emplace(std::string{path}, font);
+    auto font = std::make_shared<Font>(path, size);
+    m_Cache[std::string{path}][sizeKey] = font;
     return font;
+}
+
+void FontManager::ReleaseAll()
+{
+    m_Cache.clear();
 }
 } // namespace flachead::graphics

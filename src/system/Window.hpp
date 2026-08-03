@@ -23,6 +23,8 @@ public:
 
     bool PollEvents(const std::function<bool(const SDL_Event&)>& handler = {});
 
+    void WaitForEvent(int timeoutMs);
+
     SDL_Window* GetNativeWindow() const;
     WindowSize GetSize() const;
 

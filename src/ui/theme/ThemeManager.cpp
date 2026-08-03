@@ -20,7 +20,7 @@ void ThemeManager::Load(std::string_view name)
 
 std::string_view ThemeManager::Get(std::string_view key) const
 {
-    auto it = m_CurrentTheme.values.find(std::string{key});
+    auto it = m_CurrentTheme.values.find(key);
     if (it != m_CurrentTheme.values.end())
     {
         return it->second;

@@ -1,15 +1,16 @@
 #pragma once
 
+#include <functional>
+#include <map>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 namespace flachead::theme
 {
 struct ThemeDefinition
 {
     std::string name;
-    std::unordered_map<std::string, std::string> values;
+    std::map<std::string, std::string, std::less<>> values;
 };
 
 class ThemeManager

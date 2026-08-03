@@ -7,21 +7,30 @@
 
 namespace flachead::screens
 {
-void ScreenManager::Register(std::string name, std::unique_ptr<Screen> screen)
+void ScreenManager::RegisterFactory(std::string name, Factory factory)
 {
-    m_Screens.emplace(std::move(name), std::move(screen));
+    m_Factories.emplace(std::move(name), std::move(factory));
 }
 
 void ScreenManager::Push(std::string_view name)
 {
-    auto it = m_Screens.find(std::string{name});
-    if (it == m_Screens.end())
+    const std::string key{name};
+
+    auto factoryIt = m_Factories.find(key);
+    if (factoryIt == m_Factories.end())
     {
         throw std::runtime_error("Unknown screen requested");
     }
 
-    m_Stack.push_back(std::string{name});
-    it->second->OnEnter();
+    auto screenIt = m_Screens.find(key);
+    if (screenIt == m_Screens.end())
+    {
+        auto created = factoryIt->second();
+        screenIt = m_Screens.emplace(key, std::move(created)).first;
+    }
+
+    m_Stack.push_back(key);
+    screenIt->second->OnEnter();
 }
 
 void ScreenManager::Pop()
@@ -58,6 +67,15 @@ void ScreenManager::Render(flachead::ui::Canvas& canvas, int width, int height)
     {
         screen->Render(canvas, width, height);
     }
+}
+
+bool ScreenManager::NeedsRender() const
+{
+    if (auto* screen = Current())
+    {
+        return screen->NeedsRender();
+    }
+    return false;
 }
 
 Screen* ScreenManager::Current() const

@@ -2,19 +2,21 @@
 
 #include "Font.hpp"
 
+#include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 namespace flachead::graphics
 {
 class FontManager
 {
 public:
-    std::shared_ptr<Font> Acquire(std::string_view path);
+    std::shared_ptr<Font> Acquire(std::string_view path, float size);
+    void ReleaseAll();
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<Font>> m_Cache;
+    std::map<std::string, std::map<int, std::shared_ptr<Font>>, std::less<>> m_Cache;
 };
 } // namespace flachead::graphics
