@@ -10,14 +10,22 @@ Targets (Raspberry Pi Zero W):
 | Idle CPU | < 5% |
 | Playback CPU | < 20% |
 
+> **Phase 2:** the Pi Zero W is the reference platform. Desktop numbers below
+> are development-only and are never accepted as final. Every optimization is
+> validated on the Pi with `tools/pi-audit.sh` and recorded here under a
+> "Pi" row.
+
 ## How to measure
 
 ```sh
-# FPS / frame time (renders continuously for N seconds, prints report)
+# FPS / frame time / textures / peak RSS (renders continuously, prints report)
 ./build/FLACHEAD --benchmark=5
 
 # Startup time (logged automatically on every launch)
 ./build/FLACHEAD
+
+# Full one-shot resource report (run ON the Pi)
+./tools/pi-audit.sh ./build/FLACHEAD 15
 
 # Idle CPU + RAM while sitting on the launcher
 ps -o pid,pcpu,rss -p $(pgrep FLACHEAD)
@@ -30,6 +38,13 @@ ls -l build/FLACHEAD
 
 # Per-second CPU during playback (on the Pi: pidstat -p <pid> 1)
 pidstat -p $(pgrep FLACHEAD) 1
+```
+
+`--benchmark` output at exit now also includes the renderer report:
+
+```text
+Textures        : 36 (117.6 KB)
+Peak RSS        : 107044 KB
 ```
 
 ## Latest run (dev machine, X11 software renderer)

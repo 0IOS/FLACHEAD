@@ -1,0 +1,39 @@
+# FLACHEAD — Raspberry Pi Zero W service unit.
+#
+# Run FLACHEAD at boot on Raspberry Pi OS Lite. Install:
+#
+#   sudo cp packaging/flachead.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now flachead
+#
+# The unit runs on the framebuffer console (no desktop needed). Adjust the
+# SDL video driver to the actual display backend (drm, fbcon, kmsdrm) and set
+# the audio output device via SDL_AUDIODRIVER when the libmpv backend lands.
+#
+# Stop is graceful: systemd sends SIGTERM, FLACHEAD handles it and flushes
+# its logs (see Application::Run).
+
+[Unit]
+Description=FLACHEAD media center (Raspberry Pi Zero W)
+After=systemd-user-sessions.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/opt/flachead
+ExecStart=/opt/flachead/FLACHEAD
+Restart=on-failure
+RestartSec=2
+Environment=SDL_VIDEODRIVER=kmsdrm
+Environment=SDL_AUDIODRIVER=alsa
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+StandardOutput=journal
+StandardError=journal
+
+# Guardrails: FLACHEAD must never starve the single-core Pi.
+CPUQuota=80%
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target

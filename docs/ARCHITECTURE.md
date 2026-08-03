@@ -77,6 +77,26 @@ numbers. The rules below are non-negotiable:
 - Heavy work (library scans, album-art decode) must move to worker threads
   before it is added; never scan storage during playback.
 
+## Input (`input::`)
+
+- `input::InputBackend` is the only source of `SDL_Event`s. Screens implement
+  `HandleEvent(const SDL_Event&)` and never know where input came from.
+- `SdlInputBackend` (default) pumps the SDL event queue. `GpioInputBackend`
+  (Pi, `--input=gpio`) reads `/sys/class/gpio` buttons and synthesizes SDL
+  key events; it requires no extra dependencies and falls back to SDL input
+  with a warning when GPIO is unavailable.
+- **Input responsiveness is a hard constraint.** The GPIO idle path polls every
+  ~20 ms instead of the 50 ms event wait, so button latency stays under one
+  frame even when nothing needs redrawing.
+
+## Display (`system::`)
+
+- `system::DisplayBackend` is the final stage that receives rendered frames:
+  `Create/Destroy/Present/Name`. `SdlDisplayBackend` (default) presents to the
+  window. A future SPI/DRM backend for the Pi panel replaces it via
+  `Renderer::SetDisplayBackend`; it must never block in `Present()`.
+- Renderer caches and draw calls are independent of the display backend.
+
 ## Audio backend (`audio::`)
 
 - `audio::AudioService` owns an `audio::AudioBackend` and forwards all media

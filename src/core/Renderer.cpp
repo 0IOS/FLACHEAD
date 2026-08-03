@@ -43,6 +43,7 @@ bool Renderer::Create(SDL_Window* window)
     if (m_Renderer)
     {
         SDL_SetRenderDrawBlendMode(m_Renderer, SDL_BLENDMODE_BLEND);
+        m_DisplayBackend = std::make_unique<flachead::system::SdlDisplayBackend>(m_Renderer);
     }
     return m_Renderer != nullptr;
 }
@@ -102,7 +103,46 @@ void Renderer::BeginFrame()
 
 void Renderer::EndFrame()
 {
-    SDL_RenderPresent(m_Renderer);
+    if (m_DisplayBackend)
+    {
+        m_DisplayBackend->Present();
+    }
+    else
+    {
+        SDL_RenderPresent(m_Renderer);
+    }
+}
+
+void Renderer::SetDisplayBackend(std::unique_ptr<flachead::system::DisplayBackend> backend)
+{
+    m_DisplayBackend = std::move(backend);
+}
+
+Renderer::Stats Renderer::GetStats() const
+{
+    Stats stats;
+    stats.textureCount += static_cast<int>(m_TextCache.size());
+    for (const auto& [key, glyph] : m_TextCache)
+    {
+        (void)key;
+        stats.textureBytes += static_cast<size_t>(glyph.width) * static_cast<size_t>(glyph.height) * 4u;
+    }
+
+    auto countShapeCache = [&stats](const std::unordered_map<int, SDL_Texture*>& cache, bool corners) {
+        stats.textureCount += static_cast<int>(cache.size());
+        for (const auto& [radius, texture] : cache)
+        {
+            (void)texture;
+            const int size = corners ? radius + 1 : 2 * radius + 1;
+            stats.textureBytes += static_cast<size_t>(size) * static_cast<size_t>(size) * 4u;
+        }
+    };
+
+    countShapeCache(m_Corners, true);
+    countShapeCache(m_CornerOutlines, true);
+    countShapeCache(m_Discs, false);
+    countShapeCache(m_Rings, false);
+    return stats;
 }
 
 void Renderer::SetColor(const Color& color)

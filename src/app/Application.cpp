@@ -6,14 +6,15 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include <cmath>
+#include <cstring>
 #include <cstdio>
 #include <ctime>
 #include <iostream>
-
 namespace
 {
 constexpr float kFpsSampleSeconds = 1.0f;
 constexpr float kIdleWaitMs       = 50;
+constexpr int   kGpioPollMs       = 20;
 constexpr int   kFrameTierFloor   = 30;
 constexpr float kFrameEmaAlpha    = 0.1f;
 constexpr float kTierDegradeRatio = 1.10f;
@@ -21,12 +22,57 @@ constexpr float kTierPromoteRatio = 0.75f;
 constexpr int   kTierStability    = 30;
 } // namespace
 
-Application::Application(float benchmarkSeconds)
+long PeakRssKb()
+{
+#if defined(__linux__)
+    FILE* status = std::fopen("/proc/self/status", "r");
+    if (!status)
+    {
+        return -1;
+    }
+
+    long peakKb = -1;
+    char line[256];
+    while (std::fgets(line, sizeof(line), status))
+    {
+        if (std::sscanf(line, "VmHWM: %ld kB", &peakKb) == 1)
+        {
+            break;
+        }
+    }
+    std::fclose(status);
+    return peakKb;
+#else
+    return -1;
+#endif
+}
+
+Application::Application(float benchmarkSeconds, std::string_view inputBackend)
     : m_Animator([this](float) {
           // The engine animator is available for future screen and widget transitions.
       }),
       m_BenchmarkSeconds(benchmarkSeconds)
 {
+    if (inputBackend == "gpio")
+    {
+        auto gpio = std::make_unique<flachead::input::GpioInputBackend>();
+        if (gpio->Initialize())
+        {
+            m_OwnedInputBackend = std::move(gpio);
+            m_InputBackend = m_OwnedInputBackend.get();
+        }
+        else
+        {
+            flachead::core::Logger::Warning("GPIO input unavailable, falling back to SDL input");
+        }
+    }
+
+    if (!m_InputBackend)
+    {
+        m_OwnedInputBackend = std::make_unique<flachead::input::SdlInputBackend>();
+        m_OwnedInputBackend->Initialize();
+        m_InputBackend = m_OwnedInputBackend.get();
+    }
 }
 
 Application::~Application()
@@ -265,17 +311,18 @@ void Application::Run()
         m_AppManager.Tick(deltaSeconds);
         m_ScreenManager.Update(deltaSeconds);
 
-        const bool handled = m_Window.PollEvents([this](const SDL_Event& event) {
+        bool handled = false;
+        m_InputBackend->Poll([this, &handled](const SDL_Event& event) {
             if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_TERMINATING)
             {
                 m_Running = false;
-                return true;
+                handled = true;
+                return;
             }
             if (auto* screen = m_ScreenManager.Current())
             {
-                return screen->HandleEvent(event);
+                handled = screen->HandleEvent(event) || handled;
             }
-            return false;
         });
 
         const flachead::system::WindowSize size = m_Window.GetSize();
@@ -321,7 +368,14 @@ void Application::Run()
         }
         else
         {
-            m_Window.WaitForEvent(kIdleWaitMs);
+            if (std::strcmp(m_InputBackend->Name(), "gpio") == 0)
+            {
+                SDL_Delay(kGpioPollMs);
+            }
+            else
+            {
+                m_Window.WaitForEvent(kIdleWaitMs);
+            }
         }
 
         if (m_BenchmarkSeconds > 0.0f && m_FrameCount >= static_cast<std::uint32_t>(m_BenchmarkSeconds * 60.0f))
@@ -340,6 +394,16 @@ void Application::Run()
         std::printf("Max FPS (sec)   : %u\n", m_MaxFpsSecond);
         std::printf("Avg frame time  : %.3f ms\n", m_TotalFrameMs / static_cast<float>(m_FrameCount));
         std::printf("Worst frame     : %.3f ms\n", m_WorstFrameMs);
+
+        const flachead::core::Renderer::Stats rendererStats = m_Renderer.GetStats();
+        std::printf("Textures        : %d (%.1f KB)\n", rendererStats.textureCount,
+                    static_cast<double>(rendererStats.textureBytes) / 1024.0);
+
+        const long peakRssKb = PeakRssKb();
+        if (peakRssKb > 0)
+        {
+            std::printf("Peak RSS        : %ld KB\n", peakRssKb);
+        }
         std::printf("==========================\n");
     }
 }

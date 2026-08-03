@@ -6,6 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(FLACHEAD_SIZE_OPT "Reduce binary size (function/data sections, gc-sections, strip)" ON)
+
+if(FLACHEAD_SIZE_OPT)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffunction-sections -fdata-sections")
+    if(NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections -s")
+    endif()
+endif()
+
 find_package(SDL3 REQUIRED CONFIG)
 find_package(SDL3_ttf REQUIRED CONFIG)
 find_package(SDL3_image QUIET CONFIG)
@@ -27,7 +36,7 @@ add_executable(FLACHEAD
     src/graphics/Sprite.cpp
     src/graphics/Texture.cpp
     src/graphics/TextureCache.cpp
-    src/input/InputManager.cpp
+    src/input/GpioInputBackend.cpp
     src/layout/Layout.cpp
     src/layout/ColumnLayout.cpp
     src/layout/RowLayout.cpp

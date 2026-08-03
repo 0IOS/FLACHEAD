@@ -7,7 +7,9 @@
 #include "../core/Renderer.hpp"
 #include "../filesystem/FileSystem.hpp"
 #include "../graphics/FontManager.hpp"
-#include "../input/InputManager.hpp"
+#include "../input/GpioInputBackend.hpp"
+#include "../input/InputBackend.hpp"
+#include "../input/SdlInputBackend.hpp"
 #include "../screens/HomeScreen.hpp"
 #include "../screens/ScreenManager.hpp"
 #include "../services/BatteryManager.hpp"
@@ -22,11 +24,12 @@
 
 #include <cstdint>
 #include <memory>
+#include <string_view>
 
 class Application
 {
 public:
-    explicit Application(float benchmarkSeconds = 0.0f);
+    explicit Application(float benchmarkSeconds = 0.0f, std::string_view inputBackend = "sdl");
     ~Application();
 
     bool Initialize();
@@ -48,7 +51,8 @@ private:
     flachead::resource::ResourceManager m_Resources;
     flachead::models::BatteryStateModel m_BatteryState;
     flachead::models::SettingsModel m_Settings;
-    flachead::input::InputManager m_InputManager;
+    flachead::input::InputBackend* m_InputBackend{nullptr};
+    std::unique_ptr<flachead::input::InputBackend> m_OwnedInputBackend;
     flachead::audio::AudioService m_AudioService;
     flachead::filesystem::FileSystem m_FileSystem;
     flachead::services::SettingsManager m_SettingsManager;

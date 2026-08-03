@@ -8,6 +8,7 @@
 int main(int argc, char** argv)
 {
     float benchmarkSeconds = 0.0f;
+    std::string_view inputBackend = "sdl";
 
     for (int i = 1; i < argc; ++i)
     {
@@ -20,11 +21,15 @@ int main(int argc, char** argv)
         {
             benchmarkSeconds = std::stof(std::string{arg.substr(12)});
         }
+        else if (arg == "--input=sdl" || arg == "--input=gpio")
+        {
+            inputBackend = arg.substr(8);
+        }
     }
 
     const auto startTime = std::chrono::steady_clock::now();
 
-    Application app(benchmarkSeconds);
+    Application app(benchmarkSeconds, inputBackend);
 
     if (!app.Initialize())
     {

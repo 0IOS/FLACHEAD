@@ -3,7 +3,10 @@
 #include "../graphics/Font.hpp"
 #include "../math/Color.hpp"
 #include "../math/Rect.hpp"
+#include "../system/DisplayBackend.hpp"
+#include "../system/SdlDisplayBackend.hpp"
 #include <SDL3/SDL.h>
+#include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -35,6 +38,16 @@ public:
 
     SDL_Renderer* GetSDLRenderer() const { return m_Renderer; }
 
+    void SetDisplayBackend(std::unique_ptr<flachead::system::DisplayBackend> backend);
+
+    struct Stats
+    {
+        int textureCount{0};
+        size_t textureBytes{0};
+    };
+
+    Stats GetStats() const;
+
 private:
     struct TextGlyph
     {
@@ -51,6 +64,7 @@ private:
     void BlitShape(SDL_Texture* texture, float x, float y, float w, float h);
 
     SDL_Renderer* m_Renderer{nullptr};
+    std::unique_ptr<flachead::system::DisplayBackend> m_DisplayBackend;
     Color m_CurrentColor{255, 255, 255, 255};
 
     std::unordered_map<uint64_t, TextGlyph> m_TextCache;
