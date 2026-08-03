@@ -1,27 +1,19 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
-#include <string_view>
 
 namespace flachead::models
 {
-class AlbumModel
+struct AlbumModel
 {
-public:
-    AlbumModel() = default;
-    AlbumModel(std::string_view name, std::string_view artist, std::string_view artworkPath);
+    int64_t id{0};
+    std::string name;
+    std::string artist;
+    std::string artPath;
+    int trackCount{0};
+    int year{0};
 
-    void SetName(std::string_view name);
-    void SetArtist(std::string_view artist);
-    void SetArtworkPath(std::string_view artworkPath);
-
-    std::string_view Name() const;
-    std::string_view Artist() const;
-    std::string_view ArtworkPath() const;
-
-private:
-    std::string m_Name;
-    std::string m_Artist;
-    std::string m_ArtworkPath;
+    std::string DisplayName() const { return name.empty() ? "Unknown Album" : name; }
 };
 } // namespace flachead::models

@@ -28,8 +28,10 @@ add_executable(FLACHEAD
     src/animation/Tween.cpp
     src/audio/AudioService.cpp
     src/core/Logger.cpp
+    src/core/PathUtils.cpp
     src/core/Renderer.cpp
     src/core/Time.cpp
+    src/events/EventBus.cpp
     src/filesystem/FileSystem.cpp
     src/graphics/Font.cpp
     src/graphics/FontManager.cpp
