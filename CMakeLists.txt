@@ -44,6 +44,10 @@ add_executable(FLACHEAD
     src/layout/ColumnLayout.cpp
     src/layout/RowLayout.cpp
     src/math/Color.cpp
+    src/metadata/FFprobeExtractor.cpp
+    src/metadata/Json.cpp
+    src/metadata/Metadata.cpp
+    src/metadata/TagLibExtractor.cpp
     src/screens/HomeScreen.cpp
     src/screens/ScreenManager.cpp
     src/services/BatteryManager.cpp
@@ -99,14 +103,23 @@ option(FLACHEAD_BUILD_TESTS "Build the FLACHEAD test suite" OFF)
 
 if(FLACHEAD_BUILD_TESTS)
     enable_testing()
-    add_executable(flachead_tests
-        tests/test_database.cpp
+    set(FLACHEAD_TEST_CORE
         src/database/Database.cpp
         src/core/Logger.cpp
         src/core/PathUtils.cpp
         src/events/EventBus.cpp
+        src/metadata/FFprobeExtractor.cpp
+        src/metadata/Json.cpp
+        src/metadata/Metadata.cpp
     )
-    target_link_libraries(flachead_tests PRIVATE sqlite3)
-    target_compile_features(flachead_tests PRIVATE cxx_std_20)
-    add_test(NAME flachead_tests COMMAND flachead_tests)
+
+    add_executable(flachead_test_database tests/test_database.cpp ${FLACHEAD_TEST_CORE})
+    target_link_libraries(flachead_test_database PRIVATE sqlite3)
+    target_compile_features(flachead_test_database PRIVATE cxx_std_20)
+    add_test(NAME flachead_test_database COMMAND flachead_test_database)
+
+    add_executable(flachead_test_metadata tests/test_metadata.cpp ${FLACHEAD_TEST_CORE})
+    target_link_libraries(flachead_test_metadata PRIVATE sqlite3)
+    target_compile_features(flachead_test_metadata PRIVATE cxx_std_20)
+    add_test(NAME flachead_test_metadata COMMAND flachead_test_metadata)
 endif()

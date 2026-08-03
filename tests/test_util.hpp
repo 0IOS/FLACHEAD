@@ -7,13 +7,13 @@
 int g_failures = 0;
 int g_checks = 0;
 
-void Check(bool condition, const char* what)
+void Check(bool condition, const std::string& what)
 {
     ++g_checks;
     if (!condition)
     {
         ++g_failures;
-        std::printf("FAIL: %s\n", what);
+        std::printf("FAIL: %s\n", what.c_str());
     }
 }
 
