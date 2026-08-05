@@ -78,6 +78,19 @@ bool ScreenManager::NeedsRender() const
     return false;
 }
 
+bool ScreenManager::IsOnStack(std::string_view name) const
+{
+    const std::string key{name};
+    for (const auto& entry : m_Stack)
+    {
+        if (entry == key)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 Screen* ScreenManager::Current() const
 {
     if (m_Stack.empty())

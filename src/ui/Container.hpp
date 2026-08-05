@@ -2,19 +2,13 @@
 
 #include "Widget.hpp"
 
-#include <memory>
-#include <vector>
-
 namespace flachead::ui
 {
+// A plain container; children are managed by the Widget base and drawn /
+// updated / laid out automatically by the base class.
 class Container : public Widget
 {
 public:
-    void AddChild(std::unique_ptr<Widget> child);
-    void RemoveChild(std::string_view id);
-    std::vector<Widget*> Children() const;
-
-private:
-    std::vector<std::unique_ptr<Widget>> m_Children;
+    Container() = default;
 };
 } // namespace flachead::ui

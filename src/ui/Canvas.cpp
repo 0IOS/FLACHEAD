@@ -1,5 +1,8 @@
 #include "Canvas.hpp"
 
+#include <SDL3_ttf/SDL_ttf.h>
+
+#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <memory>
@@ -125,9 +128,35 @@ void Canvas::DrawText(const Rect& rect, std::string_view text, const Color& colo
 
 void Canvas::DrawTextCentered(const Rect& rect, std::string_view text, const Color& color, float fontSize)
 {
-    // For now, delegate to DrawText — true centering requires TTF_GetStringSize
-    // which we'd need per-call. For the UI we generally position carefully anyway.
-    DrawText(rect, text, color, fontSize);
+    if (text.empty())
+    {
+        return;
+    }
+    std::shared_ptr<flachead::graphics::Font> font;
+    if (const std::string& fontPath = FontPath(); !fontPath.empty())
+    {
+        font = m_FontManager.Acquire(fontPath, fontSize);
+    }
+    if (!font || !font->Valid())
+    {
+        font = m_FontManager.Acquire(kSystemFont, fontSize);
+    }
+    if (!font || !font->Valid())
+    {
+        return;
+    }
+
+    int width = 0;
+    int height = 0;
+    if (TTF_GetStringSize(font->Native(), text.data(), text.size(), &width, &height))
+    {
+        const float x = rect.position.x + std::max(0.0f, (rect.size.x - static_cast<float>(width)) * 0.5f);
+        const float y = rect.position.y + std::max(0.0f, (rect.size.y - static_cast<float>(height)) * 0.5f);
+        m_Renderer.DrawText(Rect{x, y, static_cast<float>(width), static_cast<float>(height)},
+                            text, *font, color);
+        return;
+    }
+    m_Renderer.DrawText(rect, text, *font, color);
 }
 
 Color Canvas::ThemeColor(std::string_view key, const Color& fallback) const

@@ -25,10 +25,14 @@ add_executable(FLACHEAD
     src/app/AppManager.cpp
     src/animation/Animator.cpp
     src/animation/AnimationPlayer.cpp
+    src/animation/AnimationManager.cpp
+    src/animation/Easing.cpp
     src/animation/Tween.cpp
     src/audio/AudioService.cpp
     src/audio/MpvBackend.cpp
     src/audio/NullBackend.cpp
+    src/commands/Command.cpp
+    src/commands/CommandCenter.cpp
     src/core/Logger.cpp
     src/core/PathUtils.cpp
     src/core/Renderer.cpp
@@ -41,15 +45,20 @@ add_executable(FLACHEAD
     src/dap/SettingsScreen.cpp
     src/events/EventBus.cpp
     src/filesystem/FileSystem.cpp
+    src/focus/FocusManager.cpp
     src/graphics/Font.cpp
     src/graphics/FontManager.cpp
     src/graphics/Sprite.cpp
     src/graphics/Texture.cpp
     src/graphics/TextureCache.cpp
     src/input/GpioInputBackend.cpp
+    src/input/GestureRecognizer.cpp
+    src/input/InputEvent.cpp
+    src/input/InputManager.cpp
+    src/layout/BoxLayout.cpp
+    src/layout/GridLayout.cpp
     src/layout/Layout.cpp
-    src/layout/ColumnLayout.cpp
-    src/layout/RowLayout.cpp
+    src/layout/LayoutEngine.cpp
     src/library/AlbumArtExtractor.cpp
     src/library/LibraryScanner.cpp
     src/library/LibraryService.cpp
@@ -68,7 +77,6 @@ add_executable(FLACHEAD
     src/ui/Button.cpp
     src/ui/Canvas.cpp
     src/ui/Card.cpp
-    src/ui/Container.cpp
     src/ui/Dialog.cpp
     src/ui/GridView.cpp
     src/ui/IconButton.cpp
@@ -207,4 +215,21 @@ if(FLACHEAD_BUILD_TESTS)
     target_link_libraries(flachead_test_app_wiring PRIVATE sqlite3 ${CMAKE_DL_LIBS})
     target_compile_features(flachead_test_app_wiring PRIVATE cxx_std_20)
     add_test(NAME flachead_test_app_wiring COMMAND flachead_test_app_wiring)
+
+    add_executable(flachead_test_shell_ui
+        tests/test_shell_ui.cpp
+        src/animation/AnimationManager.cpp
+        src/animation/Easing.cpp
+        src/commands/Command.cpp
+        src/commands/CommandCenter.cpp
+        src/focus/FocusManager.cpp
+        src/input/GestureRecognizer.cpp
+        src/input/InputEvent.cpp
+        src/layout/BoxLayout.cpp
+        src/layout/GridLayout.cpp
+        src/layout/LayoutEngine.cpp
+    )
+    target_compile_features(flachead_test_shell_ui PRIVATE cxx_std_20)
+    target_link_libraries(flachead_test_shell_ui PRIVATE SDL3::SDL3)
+    add_test(NAME flachead_test_shell_ui COMMAND flachead_test_shell_ui)
 endif()
