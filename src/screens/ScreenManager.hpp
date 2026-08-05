@@ -33,6 +33,11 @@ public:
     virtual void OnInputEvent(const flachead::input::InputEvent&) {}
     virtual bool OnCommand(flachead::commands::Command) { return false; }
     virtual bool NeedsRender() const { return false; }
+
+    // True for screens rendered inside the operating environment's persistent
+    // chrome (top status region + bottom navigation bar). The application uses
+    // this to apply chrome-level navigation such as Back.
+    virtual bool IsChromeScreen() const { return false; }
 };
 
 class ScreenManager

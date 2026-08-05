@@ -124,6 +124,24 @@ order is wallpaper → widget tree → overlays. Shell screens are the only ones
 that consume the semantic input pipeline (gestures, d-pad focus commands,
 home-button commands); legacy DAP screens keep their raw-SDL path.
 
+Every screen renders inside the **persistent three-region chrome**
+(`ShellChrome`): a top status strip (title, clock, battery), the primary
+content region, and a bottom navigation bar (Back / Apps / Home / Search /
+Queue) that dispatches through the command center so taps get the same
+fullscreen fade as d-pad navigation. Geometry is derived from the **240×320
+portrait reference** (`ShellChrome::kReferenceWidth`) and scales up on larger
+windows; `ui::Canvas` applies the same scale to typography via `SetScale`.
+
+- `ShellScreen` — base for the operating-environment screens. It owns the
+  chrome, stores the last view size for nav-bar hit-testing, and lays its
+  widget tree out in `ShellChrome::ContentArea()` only. `IsChromeScreen()`
+  marks it so the application's Back handling applies.
+- `LegacyChromeScreen` — wraps a legacy DAP screen so it inherits the
+  persistent bottom nav bar too. The inner screen keeps its own
+  status/header/footer as the content region (rendered at reduced height) and
+  forwards lifecycle/raw events; nav-bar taps are intercepted in
+  `OnInputEvent`.
+
 - `AmbientHomeScreen` (`home`) — full-player home: cover art (also the
   wallpaper), transport, favorites/shuffle/repeat, app shortcuts. Renders only
   when playback state actually changes.

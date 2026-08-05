@@ -41,8 +41,14 @@ private:
     flachead::ui::Image* m_Cover{nullptr};
     flachead::ui::Label* m_Title{nullptr};
     flachead::ui::Label* m_Subtitle{nullptr};
+    flachead::ui::Image* m_NextCover{nullptr};
+    flachead::ui::Label* m_NextTitle{nullptr};
+    flachead::ui::Label* m_NextSubtitle{nullptr};
     flachead::ui::Label* m_Position{nullptr};
     flachead::ui::Label* m_Duration{nullptr};
+    flachead::ui::Label* m_PreviousLyric{nullptr};
+    flachead::ui::Label* m_CurrentLyric{nullptr};
+    flachead::ui::Label* m_NextLyric{nullptr};
     flachead::ui::Label* m_EmptyTitle{nullptr};
     flachead::ui::ProgressBar* m_Progress{nullptr};
     flachead::ui::Button* m_PlayPause{nullptr};

@@ -89,15 +89,16 @@ void Canvas::DrawCircle(float cx, float cy, float radius, const Color& color)
 
 void Canvas::DrawText(const Rect& rect, std::string_view text, const Color& color, float fontSize)
 {
+    const float scaledSize = fontSize * m_Scale;
     std::shared_ptr<flachead::graphics::Font> font;
     if (const std::string& fontPath = FontPath(); !fontPath.empty())
     {
-        font = m_FontManager.Acquire(fontPath, fontSize);
+        font = m_FontManager.Acquire(fontPath, scaledSize);
     }
 
     if (!font || !font->Valid())
     {
-        font = m_FontManager.Acquire(kSystemFont, fontSize);
+        font = m_FontManager.Acquire(kSystemFont, scaledSize);
     }
 
     if (font && font->Valid())
@@ -112,14 +113,15 @@ void Canvas::DrawTextCentered(const Rect& rect, std::string_view text, const Col
     {
         return;
     }
+    const float scaledSize = fontSize * m_Scale;
     std::shared_ptr<flachead::graphics::Font> font;
     if (const std::string& fontPath = FontPath(); !fontPath.empty())
     {
-        font = m_FontManager.Acquire(fontPath, fontSize);
+        font = m_FontManager.Acquire(fontPath, scaledSize);
     }
     if (!font || !font->Valid())
     {
-        font = m_FontManager.Acquire(kSystemFont, fontSize);
+        font = m_FontManager.Acquire(kSystemFont, scaledSize);
     }
     if (!font || !font->Valid())
     {

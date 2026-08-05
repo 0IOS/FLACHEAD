@@ -1,11 +1,13 @@
 #pragma once
 
 #include "../animation/AnimationManager.hpp"
+#include "../commands/CommandCenter.hpp"
 #include "../core/Renderer.hpp"
 #include "../dap/AppContext.hpp"
 #include "../focus/FocusManager.hpp"
 #include "../screens/ScreenManager.hpp"
 #include "../services/BackgroundJobManager.hpp"
+#include "../services/BatteryManager.hpp"
 #include "../services/MemoryManager.hpp"
 #include "../services/NotificationManager.hpp"
 #include "../ui/overlay/OverlayManager.hpp"
@@ -33,6 +35,8 @@ struct ShellServices
     flachead::services::BackgroundJobManager* backgroundJobs{nullptr};
     flachead::services::NotificationManager* notifications{nullptr};
     flachead::services::MemoryManager* memory{nullptr};
+    flachead::services::BatteryManager* battery{nullptr};
+    flachead::commands::CommandCenter* commandCenter{nullptr};
 
     // Requests a clean application exit (system screen power actions).
     std::function<void()> quit;

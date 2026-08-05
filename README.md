@@ -13,9 +13,11 @@ idle CPU < 5%). See `docs/BENCHMARKS.md`.
 
 All core milestones are implemented and committed. The app builds, all test
 suites pass, the library scan indexes a real music folder, and the DAP screens
-play back tracks through the audio stack. The AO-1..AO-5 operating environment
-layer (shell screens, input pipeline, screen transitions, services) is built
-on top and covered by its own test suites.
+play back tracks through the audio stack. The AO-1..AO-7 operating environment
+layer (shell screens, input pipeline, screen transitions, services, the
+persistent three-region chrome) is built on top and covered by its own test
+suites. The reference display is the Pi Zero W + SPI panel: **portrait 240×320**,
+with a UI scale so the same layout renders cleanly on larger windows.
 
 | Milestone | Commit | What landed |
 |---|---|---|
@@ -35,6 +37,8 @@ on top and covered by its own test suites.
 | AO-3 environment | `3d83803` | Shell Settings + System screens (about, power) |
 | AO-4 services | `efa6177` | Background jobs, notifications, memory monitor + tests |
 | AO-5 polish | `698c898` | Screen transitions, home-button semantics, perf throttle |
+| AO-6 docs | `ebe1ac9` | Architecture / README / benchmark docs refresh |
+| AO-7 DAP chrome | _pending_ | Portrait 240×320 reference, UI scale, three-region chrome (status + content + persistent bottom nav) wrapping every screen incl. legacy DAP screens |
 
 ## Quick start
 
@@ -104,6 +108,10 @@ footer.
 
 ## Screens
 
+Every screen — shell and legacy DAP alike — renders inside the same three-region
+chrome: a top status strip (title, clock, battery), the primary content region,
+and a **persistent bottom navigation bar** (Back / Apps / Home / Search / Queue).
+
 | Screen | Factory | Purpose |
 |---|---|---|
 | Home (shell) | `home` | Ambient full-player home: cover wallpaper, transport, shortcuts |
@@ -144,8 +152,9 @@ src/models     Song / Album / Artist / Playlist models
 src/playback   PlaybackController (state machine), QueueManager, PlaylistEngine
 src/screens    ScreenManager + DAP Home screen
 src/services   SettingsManager, BackgroundJobs, Notifications, Memory, Battery, Storage
-src/shell      Operating environment: ShellScreen, Ambient Home, Launcher, Task
-               Overview, Universal Search, Settings, System, transitions
+src/shell      Operating environment: ShellChrome (three-region layout),
+               LegacyChromeScreen (wraps DAP screens), Ambient Home, Launcher,
+               Task Overview, Universal Search, Settings, System, transitions
 src/ui         Widgets (Button, Slider, Label, TextField, Image...), palette,
                theme, wallpaper, overlays
 tests          9 test suites (ctest)

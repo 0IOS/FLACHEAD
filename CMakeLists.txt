@@ -122,6 +122,8 @@ add_executable(FLACHEAD
     src/playback/PlaylistEngine.cpp
     src/playback/QueueManager.cpp
     src/shell/ShellScreen.cpp
+    src/shell/ShellChrome.cpp
+    src/shell/LegacyChromeScreen.cpp
     src/shell/AmbientHomeScreen.cpp
     src/shell/LauncherScreen.cpp
     src/shell/TaskOverviewScreen.cpp

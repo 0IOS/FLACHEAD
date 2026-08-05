@@ -23,10 +23,13 @@ bool Window::Create()
         return false;
     }
 
+    // Reference operating environment: portrait 240x320 (Pi Zero W + SPI
+    // touchscreen). The window stays resizable so the UI scales up cleanly on
+    // larger displays.
     m_Window = SDL_CreateWindow(
         "FLACHEAD",
-        900,
-        600,
+        240,
+        320,
         SDL_WINDOW_RESIZABLE);
 
     if (!m_Window)

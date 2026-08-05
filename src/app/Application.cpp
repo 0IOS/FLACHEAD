@@ -9,6 +9,7 @@
 #include "../screens/HomeScreen.hpp"
 #include "../shell/AmbientHomeScreen.hpp"
 #include "../shell/LauncherScreen.hpp"
+#include "../shell/LegacyChromeScreen.hpp"
 #include "../shell/ShellScreen.hpp"
 #include "../shell/SettingsScreen.hpp"
 #include "../shell/SystemScreen.hpp"
@@ -36,6 +37,16 @@ constexpr float kFrameEmaAlpha    = 0.1f;
 constexpr float kTierDegradeRatio = 1.10f;
 constexpr float kTierPromoteRatio = 0.75f;
 constexpr int   kTierStability    = 30;
+constexpr float kReferenceWidth   = flachead::shell::ShellChrome::kReferenceWidth;
+
+// Wraps a legacy DAP screen in the operating environment's persistent chrome.
+template <typename T>
+std::unique_ptr<flachead::screens::Screen> WrapLegacy(
+    const flachead::dap::AppContext& context,
+    const flachead::shell::ShellServices& services)
+{
+    return std::make_unique<flachead::shell::LegacyChromeScreen>(std::make_unique<T>(context), services);
+}
 } // namespace
 
 long PeakRssKb()
@@ -164,6 +175,8 @@ void Application::SetupShellInput()
     m_ShellServices.backgroundJobs = &m_BackgroundJobs;
     m_ShellServices.notifications = &m_Notifications;
     m_ShellServices.memory = &m_Memory;
+    m_ShellServices.battery = &m_BatteryManager;
+    m_ShellServices.commandCenter = &m_CommandCenter;
     m_ShellServices.quit = [this] { m_Running = false; };
 
     // Bridge notifications into the overlay layer as dismissible toasts.
@@ -201,8 +214,10 @@ bool Application::HandleSystemCommand(flachead::commands::Command command)
         case flachead::commands::Command::Back:
             // Legacy DAP screens already pop themselves on the raw Escape key;
             // applying Back here too would pop two screens. The shell handles
-            // Back through its own OnShellCommand when it wants it.
-            if (IsShellTop() && m_ScreenManager.Depth() > 1)
+            // Back through its own OnShellCommand when it wants it. When a
+            // chrome screen is top, Back pops it (this includes legacy DAP
+            // screens wrapped in the persistent navigation bar).
+            if (IsChromeTop() && m_ScreenManager.Depth() > 1)
             {
                 m_Transitions.BeginFade();
                 m_ScreenManager.Pop();
@@ -292,6 +307,15 @@ bool Application::HandleSystemCommand(flachead::commands::Command command)
 bool Application::IsShellTop() const
 {
     return dynamic_cast<flachead::shell::ShellScreen*>(m_ScreenManager.Current()) != nullptr;
+}
+
+bool Application::IsChromeTop() const
+{
+    if (auto* screen = m_ScreenManager.Current())
+    {
+        return screen->IsChromeScreen();
+    }
+    return false;
 }
 
 void Application::SetupServices()
@@ -409,52 +433,54 @@ void Application::RegisterScreens()
     });
 
     const flachead::dap::AppContext& context = m_AppContext;
-    m_ScreenManager.RegisterFactory("nowplaying", [context] {
-        return std::make_unique<flachead::dap::NowPlayingScreen>(context);
+    const flachead::shell::ShellServices services = m_ShellServices;
+    m_ScreenManager.RegisterFactory("nowplaying", [context, services] {
+        return WrapLegacy<flachead::dap::NowPlayingScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("queue", [context] {
-        return std::make_unique<flachead::dap::QueueScreen>(context);
+    m_ScreenManager.RegisterFactory("queue", [context, services] {
+        return WrapLegacy<flachead::dap::QueueScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("scan", [context] {
-        return std::make_unique<flachead::dap::ScanScreen>(context);
+    m_ScreenManager.RegisterFactory("scan", [context, services] {
+        return WrapLegacy<flachead::dap::ScanScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("songs", [context] {
-        return std::make_unique<flachead::dap::SongsScreen>(context);
+    m_ScreenManager.RegisterFactory("songs", [context, services] {
+        return WrapLegacy<flachead::dap::SongsScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("albums", [context] {
-        return std::make_unique<flachead::dap::AlbumsScreen>(context);
+    m_ScreenManager.RegisterFactory("albums", [context, services] {
+        return WrapLegacy<flachead::dap::AlbumsScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("album", [context] {
-        return std::make_unique<flachead::dap::AlbumScreen>(context);
+    m_ScreenManager.RegisterFactory("album", [context, services] {
+        return WrapLegacy<flachead::dap::AlbumScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("artists", [context] {
-        return std::make_unique<flachead::dap::ArtistsScreen>(context);
+    m_ScreenManager.RegisterFactory("artists", [context, services] {
+        return WrapLegacy<flachead::dap::ArtistsScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("artist", [context] {
-        return std::make_unique<flachead::dap::ArtistScreen>(context);
+    m_ScreenManager.RegisterFactory("artist", [context, services] {
+        return WrapLegacy<flachead::dap::ArtistScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("search", [context] {
-        return std::make_unique<flachead::dap::SearchScreen>(context);
+    m_ScreenManager.RegisterFactory("search", [context, services] {
+        return WrapLegacy<flachead::dap::SearchScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("favorites", [context] {
-        return std::make_unique<flachead::dap::FavoritesScreen>(context);
+    m_ScreenManager.RegisterFactory("favorites", [context, services] {
+        return WrapLegacy<flachead::dap::FavoritesScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("recent", [context] {
-        return std::make_unique<flachead::dap::RecentScreen>(context);
+    m_ScreenManager.RegisterFactory("recent", [context, services] {
+        return WrapLegacy<flachead::dap::RecentScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("playlists", [context] {
-        return std::make_unique<flachead::dap::PlaylistsScreen>(context);
+    m_ScreenManager.RegisterFactory("playlists", [context, services] {
+        return WrapLegacy<flachead::dap::PlaylistsScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("playlist", [context] {
-        return std::make_unique<flachead::dap::PlaylistScreen>(context);
+    m_ScreenManager.RegisterFactory("playlist", [context, services] {
+        return WrapLegacy<flachead::dap::PlaylistScreen>(context, services);
     });
-    m_ScreenManager.RegisterFactory("dapsettings", [context] {
-        return std::make_unique<flachead::dap::SettingsScreen>(context);
+    m_ScreenManager.RegisterFactory("dapsettings", [context, services] {
+        return WrapLegacy<flachead::dap::SettingsScreen>(context, services);
     });
 }
 
 void Application::RenderFrame(int width, int height)
 {
+    m_Canvas->SetScale(static_cast<float>(width) / kReferenceWidth);
     m_Renderer.BeginFrame();
     m_ScreenManager.Render(*m_Canvas, width, height);
 

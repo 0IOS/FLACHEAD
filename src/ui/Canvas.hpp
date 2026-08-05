@@ -6,6 +6,7 @@
 #include "../math/Rect.hpp"
 #include "../ui/theme/ThemeManager.hpp"
 
+#include <algorithm>
 #include <string_view>
 
 namespace flachead::ui
@@ -30,6 +31,11 @@ public:
     void DrawText(const Rect& rect, std::string_view text, const Color& color, float fontSize = 18.0f);
     void DrawTextCentered(const Rect& rect, std::string_view text, const Color& color, float fontSize = 18.0f);
 
+    // UI scale relative to the 240x320 reference environment. Applied to text
+    // so typography grows with the window while layout stays in logical pixels.
+    void SetScale(float scale) { m_Scale = std::max(1.0f, scale); }
+    float Scale() const { return m_Scale; }
+
     // Theme
     Color ThemeColor(std::string_view key, const Color& fallback) const;
 
@@ -42,6 +48,7 @@ private:
     flachead::core::Renderer& m_Renderer;
     flachead::graphics::FontManager& m_FontManager;
     flachead::theme::ThemeManager& m_ThemeManager;
+    float m_Scale{1.0f};
     mutable std::string m_CachedFontPath;
 };
 } // namespace flachead::ui

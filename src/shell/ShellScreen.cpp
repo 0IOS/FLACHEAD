@@ -117,12 +117,19 @@ void ShellScreen::OnUpdate(float deltaSeconds)
 
 void ShellScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 {
-    Wallpaper().Draw(canvas, width, height);
+    m_ViewWidth = width;
+    m_ViewHeight = height;
 
-    m_Root->SetBounds(Rect{0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)});
-    m_Root->Layout(Rect{0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)});
+    Wallpaper().Draw(canvas, width, height);
+    m_Chrome.DrawStatus(canvas, width, height, ChromeTitle());
+
+    const Rect content = m_Chrome.ContentArea(width, height);
+    m_Root->SetBounds(content);
+    m_Root->Layout(content);
     SyncFocus();
     m_Root->Draw(canvas);
+
+    m_Chrome.DrawNav(canvas, width, height);
 
     if (!Overlays().IsEmpty())
     {
@@ -138,6 +145,26 @@ void ShellScreen::OnInputEvent(const flachead::input::InputEvent& event)
         HandleCommandSignal(event);
         return;
     }
+
+    // The persistent navigation bar is chrome: a tap on it dispatches a
+    // command through the command center (which applies screen transitions)
+    // instead of reaching the content widget tree.
+    if (m_ViewWidth > 0 && m_ViewHeight > 0 &&
+        (event.action == flachead::input::InputAction::Tap ||
+         event.action == flachead::input::InputAction::Press))
+    {
+        const flachead::commands::Command nav =
+            m_Chrome.NavCommandAt(m_ViewWidth, m_ViewHeight, event.position);
+        if (nav != flachead::commands::Command::None)
+        {
+            if (m_Services.commandCenter)
+            {
+                m_Services.commandCenter->Dispatch(nav);
+            }
+            return;
+        }
+    }
+
     if (!Overlays().IsEmpty())
     {
         if (event.action == flachead::input::InputAction::Tap)

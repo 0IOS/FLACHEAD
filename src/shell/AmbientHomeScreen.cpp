@@ -100,6 +100,18 @@ void AmbientHomeScreen::BuildPlayerView()
     auto progress = std::unique_ptr<flachead::ui::ProgressBar>(m_Progress);
     panelRaw->AddChild(std::move(progress));
 
+    auto lyricPanel = std::make_unique<flachead::ui::Container>();
+    lyricPanel->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical));
+    auto* lyricPanelRaw = lyricPanel.get();
+    panelRaw->AddChild(std::move(lyricPanel));
+
+    m_PreviousLyric = MakeLabel("Previous lyric", 11.0f, *lyricPanelRaw);
+    m_PreviousLyric->SetAlign(flachead::ui::Label::Align::Center);
+    m_CurrentLyric = MakeLabel("Current lyric", 16.0f, *lyricPanelRaw);
+    m_CurrentLyric->SetAlign(flachead::ui::Label::Align::Center);
+    m_NextLyric = MakeLabel("Next lyric", 11.0f, *lyricPanelRaw);
+    m_NextLyric->SetAlign(flachead::ui::Label::Align::Center);
+
     auto timeRow = std::make_unique<flachead::ui::Container>();
     timeRow->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal));
     flachead::ui::Widget* timeRowRaw = timeRow.get();
@@ -213,6 +225,19 @@ void AmbientHomeScreen::RefreshTrack()
     if (m_Subtitle)
     {
         m_Subtitle->SetText(m_LastSubtitle);
+    }
+
+    if (m_PreviousLyric)
+    {
+        m_PreviousLyric->SetText("Previous lyric");
+    }
+    if (m_CurrentLyric)
+    {
+        m_CurrentLyric->SetText("Current lyric");
+    }
+    if (m_NextLyric)
+    {
+        m_NextLyric->SetText("Next lyric");
     }
 
     if (m_Progress)

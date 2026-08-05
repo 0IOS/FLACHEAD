@@ -63,6 +63,7 @@ private:
     void OnSystemCommand(flachead::commands::Command command);
     bool HandleSystemCommand(flachead::commands::Command command);
     bool IsShellTop() const;
+    bool IsChromeTop() const;
 
     flachead::events::EventBus m_EventBus;
     flachead::system::Window m_Window;

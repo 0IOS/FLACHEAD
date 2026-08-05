@@ -8,6 +8,7 @@
 #include "../ui/overlay/OverlayManager.hpp"
 #include "../ui/theme/ThemeManager.hpp"
 #include "../ui/wallpaper/WallpaperManager.hpp"
+#include "ShellChrome.hpp"
 #include "ShellServices.hpp"
 
 #include <memory>
@@ -36,6 +37,10 @@ public:
 
     // Markers the application uses to route shell-level commands.
     bool IsShellScreen() const { return true; }
+    bool IsChromeScreen() const override { return true; }
+
+    // Title shown in the persistent top status strip.
+    virtual std::string_view ChromeTitle() const { return ScreenKey(); }
 
 protected:
     const flachead::dap::AppContext& Ctx() const { return m_Services.app; }
@@ -82,10 +87,13 @@ private:
     bool HandleFocusCommand(flachead::commands::Command command);
 
     ShellServices m_Services;
+    flachead::shell::ShellChrome m_Chrome{m_Services};
     std::unique_ptr<flachead::ui::Container> m_Root;
     std::unordered_map<std::string, flachead::ui::Widget*> m_WidgetsById;
     std::string m_FocusPrefix;
     std::string m_FocusedWidgetId;
+    int m_ViewWidth{0};
+    int m_ViewHeight{0};
     bool m_Dirty{true};
 };
 } // namespace flachead::shell
