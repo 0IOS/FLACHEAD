@@ -5,6 +5,9 @@
 #include "../dap/AppContext.hpp"
 #include "../focus/FocusManager.hpp"
 #include "../screens/ScreenManager.hpp"
+#include "../services/BackgroundJobManager.hpp"
+#include "../services/MemoryManager.hpp"
+#include "../services/NotificationManager.hpp"
 #include "../ui/overlay/OverlayManager.hpp"
 #include "../ui/theme/ThemeManager.hpp"
 #include "../ui/wallpaper/WallpaperManager.hpp"
@@ -27,6 +30,9 @@ struct ShellServices
     flachead::animation::AnimationManager* animations{nullptr};
     flachead::focus::FocusManager* focus{nullptr};
     flachead::screens::ScreenManager* screens{nullptr};
+    flachead::services::BackgroundJobManager* backgroundJobs{nullptr};
+    flachead::services::NotificationManager* notifications{nullptr};
+    flachead::services::MemoryManager* memory{nullptr};
 
     // Requests a clean application exit (system screen power actions).
     std::function<void()> quit;

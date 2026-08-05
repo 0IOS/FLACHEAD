@@ -37,6 +37,7 @@ void SystemScreen::BuildShell()
     addInfo("info.backend", "Backend: --");
     addInfo("info.tracks", "Tracks: --");
     addInfo("info.settings", "Scan roots: --");
+    addInfo("info.memory", "Memory: --");
 
     auto spacer = std::make_unique<flachead::ui::Label>();
     spacer->SetText("");
@@ -94,6 +95,20 @@ void SystemScreen::RefreshLabels()
             }
             char buffer[64];
             std::snprintf(buffer, sizeof(buffer), "Tracks: %zu", count);
+            button->SetText(buffer);
+        }
+        else if (button->Id() == "info.memory")
+        {
+            char buffer[96];
+            if (Services().memory && Services().memory->CurrentRssKb() > 0)
+            {
+                std::snprintf(buffer, sizeof(buffer), "Memory: %zu / %zu KB",
+                              Services().memory->CurrentRssKb(), Services().memory->PeakRssKb());
+            }
+            else
+            {
+                std::snprintf(buffer, sizeof(buffer), "Memory: --");
+            }
             button->SetText(buffer);
         }
         else if (button->Id() == "info.settings")

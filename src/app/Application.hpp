@@ -21,10 +21,13 @@
 #include "../playback/PlaybackController.hpp"
 #include "../playback/PlaylistEngine.hpp"
 #include "../screens/ScreenManager.hpp"
+#include "../services/BackgroundJobManager.hpp"
 #include "../services/BatteryManager.hpp"
 #include "../resource/ResourceManager.hpp"
 #include "../models/BatteryStateModel.hpp"
 #include "../models/SettingsModel.hpp"
+#include "../services/MemoryManager.hpp"
+#include "../services/NotificationManager.hpp"
 #include "../services/SettingsManager.hpp"
 #include "../services/StorageManager.hpp"
 #include "../shell/ShellServices.hpp"
@@ -82,6 +85,10 @@ private:
     flachead::services::SettingsManager m_SettingsManager;
     flachead::services::StorageManager m_StorageManager;
     flachead::services::BatteryManager m_BatteryManager;
+    flachead::services::BackgroundJobManager m_BackgroundJobs;
+    flachead::services::NotificationManager m_Notifications;
+    flachead::services::MemoryManager m_Memory;
+    int m_ScanSubscription{0};
     flachead::animation::Animator m_Animator;
     flachead::dap::AppContext m_AppContext;
     std::vector<std::string> m_ScanRoots;

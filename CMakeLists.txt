@@ -20,6 +20,7 @@ find_package(SDL3_ttf REQUIRED CONFIG)
 find_package(SDL3_image QUIET CONFIG)
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
+find_package(Threads REQUIRED)
 
 add_executable(FLACHEAD
     src/main.cpp
@@ -74,6 +75,9 @@ add_executable(FLACHEAD
     src/screens/HomeScreen.cpp
     src/screens/ScreenManager.cpp
     src/services/BatteryManager.cpp
+    src/services/BackgroundJobManager.cpp
+    src/services/MemoryManager.cpp
+    src/services/NotificationManager.cpp
     src/services/SettingsManager.cpp
     src/services/StorageManager.cpp
     src/system/Window.cpp
@@ -251,4 +255,14 @@ if(FLACHEAD_BUILD_TESTS)
     target_compile_features(flachead_test_shell_ui PRIVATE cxx_std_20)
     target_link_libraries(flachead_test_shell_ui PRIVATE SDL3::SDL3)
     add_test(NAME flachead_test_shell_ui COMMAND flachead_test_shell_ui)
+
+    add_executable(flachead_test_services
+        tests/test_services.cpp
+        src/services/BackgroundJobManager.cpp
+        src/services/MemoryManager.cpp
+        src/services/NotificationManager.cpp
+    )
+    target_compile_features(flachead_test_services PRIVATE cxx_std_20)
+    target_link_libraries(flachead_test_services PRIVATE Threads::Threads)
+    add_test(NAME flachead_test_services COMMAND flachead_test_services)
 endif()

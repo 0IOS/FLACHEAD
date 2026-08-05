@@ -14,6 +14,7 @@
 #include "../shell/SystemScreen.hpp"
 #include "../shell/TaskOverviewScreen.hpp"
 #include "../shell/UniversalSearchScreen.hpp"
+#include "../ui/Label.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -160,7 +161,22 @@ void Application::SetupShellInput()
     m_ShellServices.animations = &m_Animations;
     m_ShellServices.focus = &m_Focus;
     m_ShellServices.screens = &m_ScreenManager;
+    m_ShellServices.backgroundJobs = &m_BackgroundJobs;
+    m_ShellServices.notifications = &m_Notifications;
+    m_ShellServices.memory = &m_Memory;
     m_ShellServices.quit = [this] { m_Running = false; };
+
+    // Bridge notifications into the overlay layer as dismissible toasts.
+    m_Notifications.SetToastHook([this](const flachead::services::Notification& notification) {
+        auto toast = std::make_shared<flachead::ui::Label>();
+        std::string text = notification.title;
+        if (!notification.body.empty())
+        {
+            text += ": " + notification.body;
+        }
+        toast->SetText(text);
+        m_Overlays.PushToast(notification.id, std::move(toast));
+    });
 
     m_CommandCenter.Register(
         [this](flachead::commands::Command command) { return HandleSystemCommand(command); }, 0);
@@ -339,6 +355,19 @@ void Application::SetupServices()
     m_AppContext.navigate = [this](std::string_view name) { m_ScreenManager.Push(name); };
     m_AppContext.goBack = [this] { m_ScreenManager.Pop(); };
 
+    m_BackgroundJobs.Start();
+    m_Memory.Initialize(
+        static_cast<std::size_t>(std::max(0, m_SettingsManager.GetInt("memory.soft_budget_kb", 0))),
+        static_cast<std::size_t>(std::max(0, m_SettingsManager.GetInt("memory.hard_budget_kb", 0))));
+
+    m_ScanSubscription = m_EventBus.Subscribe(flachead::events::Type::LibraryScanFinished,
+                                              [this](const flachead::events::Event& event) {
+                                                  m_Notifications.Push(
+                                                      "Library scan finished",
+                                                      std::to_string(event.intValue) + " tracks",
+                                                      0, "library.scan");
+                                              });
+
     if (!m_ScanRoots.empty())
     {
         m_LibraryService.StartScan(m_ScanRoots);
@@ -487,6 +516,9 @@ void Application::Run()
         m_AudioService.PollBackendEvents();
         m_Playback.Update(deltaSeconds);
         m_ScreenManager.Update(deltaSeconds);
+        m_BackgroundJobs.Update();
+        m_Notifications.Update();
+        m_Memory.Update();
 
         bool handled = false;
         m_InputBackend->Poll([this, &handled](const SDL_Event& event) {
@@ -600,6 +632,7 @@ void Application::Shutdown()
 
     m_Playback.Shutdown();
     m_AudioService.Shutdown();
+    m_BackgroundJobs.Shutdown();
     m_LibraryService.WaitForScan();
     m_AppManager.Shutdown();
     m_Resources.Shutdown();
