@@ -18,15 +18,15 @@ It measures, in one run:
 2. startup time (logged by the app)
 3. FPS / frame time / worst frame (`--benchmark`)
 4. peak RSS (`/usr/bin/time -v`)
-5. idle CPU + RSS while sitting on the launcher (`pidstat`)
+5. idle CPU + RSS while sitting on the home screen (`pidstat`)
 
 ## Report mode (in the binary)
 
 `--benchmark[=seconds]` now also prints a renderer report at exit:
 
 ```text
-Textures        : 36 (117.6 KB)
-Peak RSS        : 107044 KB
+Textures        : 41 (228.2 KB)
+Peak RSS        : 110404 KB
 ```
 
 Texture count + estimated texture memory come from the renderer caches
@@ -42,7 +42,7 @@ ms_print massif.out.* | less
 ```
 
 Look for: allocation churn per frame (a growing heap during the static
-launcher render means a per-frame leak), and the peak heap byte count.
+home-screen render means a per-frame leak), and the peak heap byte count.
 
 ## CPU profiling (requires `perf`, needs `perf_event_paranoid=1`)
 
@@ -63,7 +63,7 @@ capped at 256 glyphs (~2 MB worst case); shape masks at 32 radii each
 
 ## Startup profiling
 
-Startup time is logged on every launch. To break down the 78 ms (desktop)
+Startup time is logged on every launch. To break down the 60 ms (desktop)
 into per-phase numbers on the Pi, run:
 
 ```sh

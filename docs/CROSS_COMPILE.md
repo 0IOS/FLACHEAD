@@ -35,6 +35,11 @@ libraries. Options:
 2. Or copy the armhf SDL packages from the Pi onto the host and point CMake
    at them with `CMAKE_FIND_ROOT_PATH` (see the toolchain file).
 
+The app also links **sqlite3** (`libsqlite3-dev` for armhf) — include it in
+the sysroot or on the Pi. If the tests are cross-compiled
+(`-DFLACHEAD_BUILD_TESTS=ON`), the armhf sqlite3 and the test binaries are
+needed on the Pi too.
+
 ## Build
 
 ```sh

@@ -27,7 +27,7 @@ Targets (Raspberry Pi Zero W):
 # Full one-shot resource report (run ON the Pi)
 ./tools/pi-audit.sh ./build/FLACHEAD 15
 
-# Idle CPU + RAM while sitting on the launcher
+# Idle CPU + RAM while sitting on the home screen
 ps -o pid,pcpu,rss -p $(pgrep FLACHEAD)
 
 # Peak RAM
@@ -44,23 +44,36 @@ pidstat -p $(pgrep FLACHEAD) 1
 
 ```text
 Textures        : 36 (117.6 KB)
-Peak RSS        : 107044 KB
+Peak RSS        : 110404 KB
 ```
 
 ## Latest run (dev machine, X11 software renderer)
 
-Updated 2026-08-03, commit `553758a` + performance pass.
+Updated 2026-08-05, commit `f8c54a2` (DAP screens + application wiring).
 
-## Release build (production verification run)
+## Release build (M8/M9 run, home screen)
 
 | Metric | Result |
 |---|---|
-| Startup time | 78 ms |
-| Average FPS (launcher, forced render) | 60.0 |
-| Min FPS per second | 61 (0 dropped vs 60 cap) |
-| Avg frame time | 16.4 ms |
-| Worst frame | 17.3 ms |
-| Binary size | 3.4 MB (Release, -O2) |
+| Startup time | 60 ms |
+| Average FPS (home, forced render) | 60.0 |
+| Min FPS per second | 58 |
+| Avg frame time | 16.6 ms |
+| Worst frame | 43.7 ms |
+| Textures | 41 (228 KB) |
+| Peak RSS | 110.4 MB |
+| Idle CPU (home screen, no input) | ~4% of one core |
+| Library scan | 227/227 files, background thread |
+| Binary size | 9.9 MB (Release, includes DB + audio stack) |
+
+Notes:
+- The scan runs during the benchmark (a real `~/Music`, 227 FLAC files); the
+  worst frame and the min-FPS second are the scan thread competing for the
+  single core, not a render defect.
+- Idle measurement: home screen, no input, 4 s settle. The idle path blocks in
+  `SDL_WaitEventTimeout(50 ms)`, so static screens burn ~0%; the ~4% is the
+  SDL window + X11 software renderer on this desktop.
+- SIGTERM produces a clean exit 0 with all subsystems shut down in order.
 
 ## Debug build (original performance pass)
 
@@ -79,8 +92,6 @@ Notes:
 - The app is FPS-capped at 60; "min FPS 61" reflects the first second
   (window settle) and the cap math — no frame exceeded the 16.6 ms budget
   after warm-up.
-- Worst frame is 16.7 ms: no frame hit the 16.6 ms budget exactly; every
-  frame stayed within one `SDL_Delay` tick of the budget.
 - Before the optimization pass, every text draw re-rasterized via TTF and
   re-uploaded a texture, rounded rects/circles ran per-pixel `sqrt` loops
   every frame, and the loop rendered at ~1000 FPS with `SDL_Delay(1)`.
@@ -89,13 +100,15 @@ Notes:
 
 - Repeat measurements on the actual Raspberry Pi Zero W (software renderer,
   1 GHz single core) and fill in Pi-specific rows. `--benchmark` forces the
-  60 FPS tier; also record which adaptive tier (60/45/30) the launcher and
-  each app screen settle on in normal mode.
-- Measure playback CPU once the libmpv backend decodes FLAC.
-- Measure per-screen FPS in normal (adaptive) mode.
+  60 FPS tier; also record which adaptive tier (60/45/30) the home screen and
+  each DAP screen settle on in normal mode.
+- Measure playback CPU with the libmpv backend decoding real FLAC.
+- Measure per-screen FPS in normal (adaptive) mode (albums grid, search,
+  settings).
 
 ## Change log
 
 | Date | Change | Avg FPS | Min FPS | Frame ms | Idle CPU | RAM |
 |---|---|---|---|---|---|---|
 | 2026-08-03 | Text/font caches, shape masks, 60 FPS cap, idle event wait | 60.0 | 61 | 16.4 | ~4% | 107 MB |
+| 2026-08-05 | DAP screens + application wiring (home screen, DB, scanner) | 60.0 | 58 | 16.6 | ~4% | 110 MB |

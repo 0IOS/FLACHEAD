@@ -1,7 +1,10 @@
 # Boot integration (Raspberry Pi OS Lite)
 
 FLACHEAD runs as a systemd service on the framebuffer console — no desktop
-required. The app already exits gracefully on `SIGTERM` (systemd's stop
+required. It boots straight into the music UI: on first launch it creates
+`~/.flachead/flachead.db`, migrates the schema, and scans the music folder in
+the background (default root `$HOME/Music`, changeable in the on-screen
+Settings). The app already exits gracefully on `SIGTERM` (systemd's stop
 signal), flushes its logs, and is CPU/RAM-capped so it cannot starve the
 single-core Pi.
 
