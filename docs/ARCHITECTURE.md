@@ -28,8 +28,18 @@ EventBus.
 - `m_Playback` — playback state machine + queue.
 - `m_Playlists` — playlist CRUD.
 - `m_SettingsManager` — typed key/value settings backed by the `settings` table.
+- `m_BackgroundJobs` — `services::BackgroundJobManager` (single worker thread,
+  priority-ordered jobs, main-thread completion via `Update()`).
+- `m_Notifications` — `services::NotificationManager` (bounded history, drains
+  to overlay toasts through an injected hook).
+- `m_Memory` — `services::MemoryManager` (sampled current/peak RSS, optional
+  soft/hard budgets with edge-triggered crossing callbacks).
+- `m_Transitions` — `shell::ScreenTransitionManager` (fade overlay on every
+  push/pop).
 - `m_ScreenManager` — stack of screens, populated from factories.
 - `m_AppContext` — bundle of service pointers handed to every DAP screen.
+- `m_ShellServices` — bundle handed to every shell screen (renderer, themes,
+  overlays, wallpaper, animations, focus, screens, services, quit hook).
 
 ### SetupServices (boot)
 
@@ -42,24 +52,33 @@ EventBus.
 5. **Session restore**: volume, repeat mode and shuffle are restored from
    settings (`audio.volume`, `playback.repeat`, `playback.shuffle`).
 6. Scan root from `library.scan_roots`, defaulting to `$HOME/Music`; if one
-   exists, `StartScan` runs in the background.
-7. Register the screen factories and push the `home` screen.
+   exists, `StartScan` runs in the background. `LibraryScanFinished` posts a
+   "N tracks" notification.
+7. Start `BackgroundJobManager`, initialize `MemoryManager`, register the
+   screen factories, and push the `home` screen.
 
 ### Frame loop (`Application::Run`)
 
 - `Time::Update()` → animators → `AppManager.Tick` →
   `AudioService.PollBackendEvents()` → `Playback.Update(delta)` →
-  `ScreenManager.Update(delta)`.
+  `ScreenManager.Update(delta)` → `BackgroundJobs.Update()` →
+  `Notifications.Update()` → `Memory.Update()` → `Transitions.Update(delta)`.
   Polling the backend and advancing playback is what lets transport events
   reach the screens; without it the UI never learns about track changes or
   end-of-queue.
 - Input is polled through `input::InputBackend` (SDL events or synthesized
-  GPIO key events). `SDL_EVENT_QUIT` and `SDL_EVENT_TERMINATING` set the exit
-  flag.
+  GPIO key events). Raw SDL events go to `InputManager.HandleEvent`, which
+  feeds the gesture recognizer, maps keys to `Command`s, and implements the
+  center/home-button semantics (tap → launcher, double-tap → home, hold →
+  task overview). A single home tap emits a command-carrying `InputEvent`
+  (launcher) inside the double-tap window so the shell can show the
+  "double-tap for Home" hint. `SDL_EVENT_QUIT` and `SDL_EVENT_TERMINATING`
+  set the exit flag.
 - Rendering happens only when something changed (input handled, resize, minute
-  tick, screen `NeedsRender`, or benchmark mode). Otherwise the loop blocks in
-  `SDL_WaitEventTimeout(50 ms)` — static screens burn ~0% CPU. The GPIO input
-  backend polls every ~20 ms instead, so button latency stays under one frame.
+  tick, screen `NeedsRender`, transition active, or benchmark mode). Otherwise
+  the loop blocks in `SDL_WaitEventTimeout(50 ms)` — static screens burn ~0%
+  CPU. The GPIO input backend polls every ~20 ms instead, so button latency
+  stays under one frame.
 - Frame scheduling is capped at 60 FPS and adaptive: a 0.1-alpha EMA of pure
   render time steps the target 60 → 45 → 30 FPS when it exceeds a tier budget
   (and back up when it stays comfortably under). `--benchmark` forces the 60
@@ -92,9 +111,40 @@ quit TTF. The app never exits by dying to a signal.
   the owning screen and only rebuilt when the displayed value changes.
 - Album art: `library::AlbumArtExtractor` finds and caches cover images
   (`cover.jpg`, `folder.png`, embedded tags) under `~/.flachead/cache/art`
-  during a scan. The current DAP screens render album art as colored
-  placeholder blocks keyed by album name; decoding the cached covers into
-  textures is the next step.
+  during a scan. `graphics::ImageCodec` decodes PNG (libpng), JPEG (libjpeg)
+  and BMP (SDL) into textures; the ambient home screen draws the cover and
+  mirrors it into the wallpaper with a crossfade.
+
+## Operating environment (`shell::`)
+
+The shell is the appliance layer on top of the legacy DAP screens. All shell
+screens derive from `ShellScreen`, which hosts a widget tree, a per-screen
+focus scope, the wallpaper and overlay layers, and routes commands. Rendering
+order is wallpaper → widget tree → overlays. Shell screens are the only ones
+that consume the semantic input pipeline (gestures, d-pad focus commands,
+home-button commands); legacy DAP screens keep their raw-SDL path.
+
+- `AmbientHomeScreen` (`home`) — full-player home: cover art (also the
+  wallpaper), transport, favorites/shuffle/repeat, app shortcuts. Renders only
+  when playback state actually changes.
+- `LauncherScreen` (`launcher`) — two-column app grid that opens the DAP
+  screens by name and stays beneath them.
+- `TaskOverviewScreen` (`taskoverview`) — reversed stack cards with pop-to
+  navigation, plus Home/Search/Settings.
+- `UniversalSearchScreen` (`universal_search`) — `TextField` + on-screen
+  keyboard, live top-6 results that play on tap.
+- `SettingsScreen` (`settings`) — volume slider, shuffle/repeat defaults,
+  accent-color tiles + dark/light toggle (persisted as `theme.accent` /
+  `theme.dark`), library rescan, About. The legacy `dapsettings` factory
+  remains registered.
+- `SystemScreen` (`system`) — live backend/track/scan-root/memory info (labels
+  refresh on a 0.5 s throttle) plus Restart/Shut-down through the quit hook.
+
+Shell services (`ShellServices`) bundle `AppContext`, the renderer, theme,
+overlays, wallpaper, animations, focus, screens, the AO-4 services and a quit
+hook, so shell screens never touch `Application` directly. Screen pushes and
+pops run a fullscreen fade (`ScreenTransitionManager`); because the fade needs
+continuous frames, the render loop's needs-render test includes it.
 
 ## DAP screens (`dap::`)
 
@@ -112,7 +162,8 @@ rows, empty state and a now-playing bar.
 
 ### Screens
 
-- `HomeScreen` (`home`) — now-playing hero + navigation; Esc quits the app.
+- `HomeScreen` (legacy `home`) — replaced on the stack by the shell's
+  `AmbientHomeScreen`, which owns the `home` key now; Esc still quits.
 - `PlaybackScreens.cpp` — `nowplaying` (seek, volume, favorite, shuffle,
   repeat, prev/next, queue), `queue`, `scan` (progress + start/cancel).
 - `LibraryScreens.cpp` — `songs`, `albums` (grid), `album` (play album +
@@ -120,9 +171,8 @@ rows, empty state and a now-playing bar.
   added via `LibraryService::RecentlyAdded`).
 - `PlaylistScreens.cpp` — `playlists` (create/delete), `playlist` (play
   playlist, remove track).
-- `SettingsScreen.cpp` (`dapsettings`) — volume (live + persisted), scan
-  folder editing, default shuffle/repeat toggles, rescan, About with the audio
-  backend name.
+- `SettingsScreen.cpp` (legacy `dapsettings`) — kept for its advanced options;
+  the shell `settings` screen covers the common ones.
 
 ## Event bus (`events::EventBus`)
 
@@ -185,6 +235,14 @@ bus → screens. The UI never talks to playback/library internals directly.
   (Pi, `--input=gpio`) reads `/sys/class/gpio` buttons and synthesizes SDL key
   events; it requires no extra dependencies and falls back to SDL input with a
   warning when GPIO is unavailable.
+- `InputManager` turns raw events into semantic `InputEvent`s (tap,
+  double-tap, hold, swipe, drag, key) and `Command`s. Touch coordinates arrive
+  normalized and are scaled by `SetWindowSize`. Its center/home-button
+  semantics: single tap → launcher (signalled early so the shell can hint),
+  double-tap → home, hold → task overview. The double-tap check requires a
+  prior valid release so the first-ever tap at tick 0 cannot be misread.
+- Gesture state is driven per-frame by `InputManager.Update()` (holds and the
+  single-tap disambiguation timer) and `GestureRecognizer.Update()`.
 
 ## Display (`system::`)
 
@@ -207,6 +265,9 @@ bus → screens. The UI never talks to playback/library internals directly.
 - UI, screens, playback state machine and DB access run on the main thread.
 - The library scanner runs on a worker thread and must be joined at shutdown
   before the DB closes.
+- `BackgroundJobManager` runs one worker thread; job `work` bodies may touch
+  anything the scanner does, but their `complete` callbacks are drained by
+  `Update()` on the main thread so they can touch UI services.
 - The audio backend (libmpv) runs on its own threads; the UI never blocks on a
   backend call.
 - The EventBus is mutex-protected and safe to publish/subscribe from any

@@ -49,7 +49,28 @@ Peak RSS        : 110404 KB
 
 ## Latest run (dev machine, X11 software renderer)
 
-Updated 2026-08-05, commit `f8c54a2` (DAP screens + application wiring).
+Updated 2026-08-05, commit `698c898` (AO-5: transitions + home semantics).
+
+## Release build (AO-5 run, ambient home screen)
+
+| Metric | Result |
+|---|---|
+| Startup time | ~60 ms |
+| Average FPS (home, forced render) | 60.0 |
+| Min FPS per second | 61 |
+| Avg frame time | 16.2 ms |
+| Worst frame | 16.7 ms |
+| Peak RSS | ~107 MB |
+| Idle CPU (home screen, no input) | ~0% + window overhead |
+| Library scan | background thread, "N tracks" notification on finish |
+
+Notes:
+- The AO-3..AO-5 shell (ambient home with album-art wallpaper, launcher,
+  task overview, search, settings, system) holds the 60 FPS tier with the
+  same frame budget as the legacy home; the fade transition adds a single
+  fullscreen rect and stays inside the budget.
+- Memory monitor reports current/peak RSS live on the System screen; the
+  benchmark peak includes the dev-machine scan of `~/Music`.
 
 ## Release build (M8/M9 run, home screen)
 
@@ -112,3 +133,4 @@ Notes:
 |---|---|---|---|---|---|---|
 | 2026-08-03 | Text/font caches, shape masks, 60 FPS cap, idle event wait | 60.0 | 61 | 16.4 | ~4% | 107 MB |
 | 2026-08-05 | DAP screens + application wiring (home screen, DB, scanner) | 60.0 | 58 | 16.6 | ~4% | 110 MB |
+| 2026-08-05 | AO-1..AO-5 shell: ambient home, launcher, transitions, services | 60.0 | 61 | 16.2 | ~0% | ~107 MB |

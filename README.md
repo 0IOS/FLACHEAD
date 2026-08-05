@@ -13,7 +13,9 @@ idle CPU < 5%). See `docs/BENCHMARKS.md`.
 
 All core milestones are implemented and committed. The app builds, all test
 suites pass, the library scan indexes a real music folder, and the DAP screens
-play back tracks through the audio stack.
+play back tracks through the audio stack. The AO-1..AO-5 operating environment
+layer (shell screens, input pipeline, screen transitions, services) is built
+on top and covered by its own test suites.
 
 | Milestone | Commit | What landed |
 |---|---|---|
@@ -26,8 +28,13 @@ play back tracks through the audio stack.
 | M7 settings | `ab17af7` | Persistent settings manager backed by the `settings` table, tests |
 | M8 DAP | `f8c54a2` | Music player screens + application wiring |
 | M9 runtime | — | Boot into the music UI, restore volume / repeat / shuffle / scan root |
-
-M10 (this documentation) is the current milestone.
+| M10 docs | `7ee398e` | README, architecture, benchmarks, runbook |
+| AO-1 platform | `cf2c801` | Commands, focus, layout, animation, input, widget base |
+| AO-2 visual | `b0edd71` | Palette manager, theme upgrade, wallpaper, overlays, assets |
+| AO-3 environment | `3d36b3f` | Shell screens: Ambient Home, Launcher, Task Overview, Universal Search |
+| AO-3 environment | `3d83803` | Shell Settings + System screens (about, power) |
+| AO-4 services | `efa6177` | Background jobs, notifications, memory monitor + tests |
+| AO-5 polish | `698c898` | Screen transitions, home-button semantics, perf throttle |
 
 ## Quick start
 
@@ -54,9 +61,10 @@ cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 ```
 
-There are 7 test suites covering the database, metadata extraction, library
-scanning, settings, audio, playback, and the full application wiring
-(`tests/`).
+There are 9 test suites covering the database, metadata extraction, library
+scanning, settings, audio, playback, the full application wiring, the shell UI
+(layout / gestures / focus / commands / palette / transitions / home-button
+semantics), and the AO-4 services (background jobs, notifications, memory).
 
 ### Run
 
@@ -75,14 +83,18 @@ as a service, and `docs/CROSS_COMPILE.md` for the armhf toolchain.
 
 ## Controls
 
-The UI is designed for a keyboard or a handful of GPIO buttons. Up/Down moves,
-Enter selects, Esc goes back, and each screen shows its hints in the footer.
+The UI is designed for a keyboard or a handful of GPIO buttons. The shell uses
+a semantic input pipeline: Up/Down/Left/Right moves focus, Enter selects, and
+the center/home button carries the appliance navigation (tap → launcher,
+double-tap → home, hold → task overview). Each screen shows its hints in the
+footer.
 
 | Key | Action |
 |---|---|
-| Up / Down | Move selection |
+| Up / Down / Left / Right | Move focus / selection |
 | Enter / Space | Select / toggle play-pause |
-| Esc | Back / quit from Home |
+| Esc | Back |
+| Home (tap / double-tap / hold) | Launcher / Home / Task overview |
 | Left / Right | Seek −5 s / +5 s (Now Playing) |
 | Tab | Cycle Now Playing focus (prev / play / next) |
 | P / N | Previous / Next track |
@@ -94,7 +106,12 @@ Enter selects, Esc goes back, and each screen shows its hints in the footer.
 
 | Screen | Factory | Purpose |
 |---|---|---|
-| Home | `home` | Now-playing hero + navigation for every screen |
+| Home (shell) | `home` | Ambient full-player home: cover wallpaper, transport, shortcuts |
+| Launcher (shell) | `launcher` | App grid over the DAP screens |
+| Task Overview (shell) | `taskoverview` | Stack cards with pop-to navigation |
+| Universal Search (shell) | `universal_search` | On-screen keyboard + live results |
+| Settings (shell) | `settings` | Volume, theme accent, shuffle/repeat, rescan, about |
+| System (shell) | `system` | Live info (backend/tracks/memory) + power actions |
 | Now Playing | `nowplaying` | Progress, volume, shuffle/repeat, favorite, seek, queue |
 | Queue | `queue` | Play queue: view, remove, clear |
 | Albums | `albums` | Album grid from the library |
@@ -108,7 +125,7 @@ Enter selects, Esc goes back, and each screen shows its hints in the footer.
 | Playlists | `playlists` | Create / delete playlists |
 | Playlist | `playlist` | Playlist tracks: play, remove |
 | Scan | `scan` | Rescan progress, start / cancel |
-| Settings | `dapsettings` | Volume, scan folder, default repeat/shuffle, rescan, about |
+| Settings (legacy) | `dapsettings` | Advanced options kept for parity |
 
 ## Project layout
 
@@ -119,14 +136,19 @@ src/core       Renderer, logger, path utils, time
 src/dap        DAP screen base + music screens (library / playback / playlist / settings)
 src/database   SQLite wrapper, schema, migrations
 src/events     EventBus (subsystem decoupling)
+src/graphics   FontManager, ImageCodec (PNG / JPEG / BMP decode)
+src/input      InputBackend, InputManager (gestures, home-button semantics), GPIO
 src/library    LibraryService, background scanner, album art cache
 src/metadata   ffprobe / taglib extractors, JSON parser
 src/models     Song / Album / Artist / Playlist models
 src/playback   PlaybackController (state machine), QueueManager, PlaylistEngine
 src/screens    ScreenManager + DAP Home screen
-src/services   SettingsManager, BatteryManager, StorageManager
-src/views      Reusable widgets (album art, progress, bottom bar, song info)
-tests          7 test suites (ctest)
+src/services   SettingsManager, BackgroundJobs, Notifications, Memory, Battery, Storage
+src/shell      Operating environment: ShellScreen, Ambient Home, Launcher, Task
+               Overview, Universal Search, Settings, System, transitions
+src/ui         Widgets (Button, Slider, Label, TextField, Image...), palette,
+               theme, wallpaper, overlays
+tests          9 test suites (ctest)
 docs           Architecture, benchmarks, Pi runbook, boot, cross-compile
 packaging      systemd unit for Raspberry Pi OS Lite
 tools          pi-audit.sh one-shot resource report
