@@ -53,6 +53,10 @@ public:
     void OnRelease(const Vec2& position, uint64_t timestampMs);
     void Cancel();
 
+    // Drives time-based gestures (hold) without requiring motion events. Call
+    // once per frame with the current timestamp in milliseconds.
+    void Update(uint64_t nowMs);
+
     bool IsDown() const { return m_Down; }
     int  TapCount() const { return m_TapCount; }
 

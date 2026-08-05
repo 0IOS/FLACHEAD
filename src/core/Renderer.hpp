@@ -36,6 +36,17 @@ public:
     void DrawCircle(float cx, float cy, float radius);
     void DrawText(const Rect& rect, std::string_view text, const flachead::graphics::Font& font, const Color& color);
 
+    // Image textures. LoadTexture caches by path and never hands out a raw
+    // pointer twice; callers keep the shared_ptr alive for the duration of use.
+    std::shared_ptr<SDL_Texture> LoadTexture(std::string_view path, int* outWidth = nullptr, int* outHeight = nullptr);
+    std::shared_ptr<SDL_Texture> CreateTextureFromPixels(int width, int height, const uint8_t* rgbaPixels);
+    void ReleaseTexture(std::string_view path);
+
+    // Draws a texture stretched into `dest`. The texture is not cached here;
+    // ownership stays with the caller.
+    void DrawTexture(const Rect& dest, SDL_Texture* texture);
+    void DrawTexture(const Rect& dest, SDL_Texture* texture, float alpha);
+
     SDL_Renderer* GetSDLRenderer() const { return m_Renderer; }
 
     void SetDisplayBackend(std::unique_ptr<flachead::system::DisplayBackend> backend);
@@ -73,5 +84,6 @@ private:
     std::unordered_map<int, SDL_Texture*> m_CornerOutlines;
     std::unordered_map<int, SDL_Texture*> m_Discs;
     std::unordered_map<int, SDL_Texture*> m_Rings;
+    std::unordered_map<std::string, std::shared_ptr<SDL_Texture>> m_ImageCache;
 };
 } // namespace flachead::core

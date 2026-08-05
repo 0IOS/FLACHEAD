@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL_timer.h>
 
+#include <algorithm>
+
 namespace flachead::input
 {
 namespace
@@ -11,11 +13,18 @@ Vec2 TouchPosition(const SDL_Event& event)
     return Vec2{event.tfinger.x, event.tfinger.y};
 }
 
-Vec2 MousePosition(const SDL_Event& event)
+Vec2 NormalizedMousePosition(const SDL_Event& event, int windowWidth, int windowHeight)
 {
-    return Vec2{static_cast<float>(event.button.x), static_cast<float>(event.button.y)};
+    return Vec2{static_cast<float>(event.button.x) / static_cast<float>(std::max(1, windowWidth)),
+                static_cast<float>(event.button.y) / static_cast<float>(std::max(1, windowHeight))};
 }
 } // namespace
+
+void InputManager::SetWindowSize(int width, int height)
+{
+    m_WindowWidth = std::max(1, width);
+    m_WindowHeight = std::max(1, height);
+}
 
 InputManager::InputManager(GestureConfig config)
     : m_Config(config),
@@ -75,12 +84,14 @@ void InputManager::EmitCommand(commands::Command command)
 
 void InputManager::HandlePointerDown(const Vec2& position)
 {
+    const Vec2 pixels{position.x * static_cast<float>(m_WindowWidth),
+                       position.y * static_cast<float>(m_WindowHeight)};
     m_TouchDown = true;
-    m_Gestures.OnPress(position, SDL_GetTicks());
+    m_Gestures.OnPress(pixels, SDL_GetTicks());
     InputEvent event;
     event.action = InputAction::Press;
     event.source = m_PointerSource;
-    event.position = position;
+    event.position = pixels;
     EmitInput(event);
 }
 
@@ -90,7 +101,9 @@ void InputManager::HandlePointerMove(const Vec2& position)
     {
         return;
     }
-    m_Gestures.OnMove(position, SDL_GetTicks());
+    m_Gestures.OnMove(Vec2{position.x * static_cast<float>(m_WindowWidth),
+                           position.y * static_cast<float>(m_WindowHeight)},
+                      SDL_GetTicks());
 }
 
 void InputManager::HandlePointerUp(const Vec2& position)
@@ -99,12 +112,14 @@ void InputManager::HandlePointerUp(const Vec2& position)
     {
         return;
     }
+    const Vec2 pixels{position.x * static_cast<float>(m_WindowWidth),
+                      position.y * static_cast<float>(m_WindowHeight)};
     m_TouchDown = false;
-    m_Gestures.OnRelease(position, SDL_GetTicks());
+    m_Gestures.OnRelease(pixels, SDL_GetTicks());
     InputEvent event;
     event.action = InputAction::Release;
     event.source = m_PointerSource;
-    event.position = position;
+    event.position = pixels;
     EmitInput(event);
 }
 
@@ -163,6 +178,7 @@ void InputManager::HandleHomeKey(bool down)
 
 void InputManager::Update()
 {
+    m_Gestures.Update(SDL_GetTicks());
     if (!m_HomePending)
     {
         return;
@@ -196,20 +212,19 @@ void InputManager::HandleEvent(const SDL_Event& event)
             if (event.button.button == SDL_BUTTON_LEFT)
             {
                 m_PointerSource = InputSource::Mouse;
-                HandlePointerDown(MousePosition(event));
+                HandlePointerDown(NormalizedMousePosition(event, m_WindowWidth, m_WindowHeight));
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
             if (event.button.button == SDL_BUTTON_LEFT)
             {
-                HandlePointerUp(MousePosition(event));
+                HandlePointerUp(NormalizedMousePosition(event, m_WindowWidth, m_WindowHeight));
             }
             break;
         case SDL_EVENT_MOUSE_MOTION:
             if (m_TouchDown)
             {
-                HandlePointerMove(Vec2{static_cast<float>(event.motion.x),
-                                       static_cast<float>(event.motion.y)});
+                HandlePointerMove(NormalizedMousePosition(event, m_WindowWidth, m_WindowHeight));
             }
             break;
         case SDL_EVENT_KEY_DOWN:

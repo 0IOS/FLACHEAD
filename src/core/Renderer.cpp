@@ -1,5 +1,7 @@
 #include "Renderer.hpp"
 
+#include "../graphics/ImageCodec.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -466,6 +468,82 @@ uint64_t Renderer::TextHash(std::string_view text, const flachead::graphics::Fon
         hash *= fnv;
     }
     return hash;
+}
+
+std::shared_ptr<SDL_Texture> Renderer::LoadTexture(std::string_view path, int* outWidth, int* outHeight)
+{
+    const std::string key{path};
+    if (auto it = m_ImageCache.find(key); it != m_ImageCache.end())
+    {
+        if (outWidth && it->second)
+        {
+            float w = 0.0f;
+            float h = 0.0f;
+            SDL_GetTextureSize(it->second.get(), &w, &h);
+            *outWidth = static_cast<int>(w);
+            *outHeight = static_cast<int>(h);
+        }
+        return it->second;
+    }
+
+    flachead::graphics::DecodedImage decoded;
+    if (!flachead::graphics::DecodeImageFile(key, decoded))
+    {
+        return nullptr;
+    }
+
+    auto texture = CreateTextureFromPixels(decoded.width, decoded.height, decoded.rgba.data());
+    if (!texture)
+    {
+        return nullptr;
+    }
+    if (outWidth)
+    {
+        *outWidth = decoded.width;
+        *outHeight = decoded.height;
+    }
+    m_ImageCache.emplace(key, texture);
+    return texture;
+}
+
+std::shared_ptr<SDL_Texture> Renderer::CreateTextureFromPixels(int width, int height, const uint8_t* rgbaPixels)
+{
+    if (!m_Renderer || !rgbaPixels || width <= 0 || height <= 0)
+    {
+        return nullptr;
+    }
+    SDL_Texture* texture = SDL_CreateTexture(m_Renderer, SDL_PIXELFORMAT_RGBA8888,
+                                             SDL_TEXTUREACCESS_STATIC, width, height);
+    if (!texture)
+    {
+        return nullptr;
+    }
+    SDL_UpdateTexture(texture, nullptr, rgbaPixels, width * 4);
+    return std::shared_ptr<SDL_Texture>(texture, [](SDL_Texture* t) { SDL_DestroyTexture(t); });
+}
+
+void Renderer::ReleaseTexture(std::string_view path)
+{
+    m_ImageCache.erase(std::string{path});
+}
+
+void Renderer::DrawTexture(const Rect& dest, SDL_Texture* texture)
+{
+    DrawTexture(dest, texture, 1.0f);
+}
+
+void Renderer::DrawTexture(const Rect& dest, SDL_Texture* texture, float alpha)
+{
+    if (!m_Renderer || !texture || dest.size.x <= 0.0f || dest.size.y <= 0.0f)
+    {
+        return;
+    }
+    SDL_SetTextureColorMod(texture, 255, 255, 255);
+    SDL_SetTextureAlphaMod(texture, static_cast<Uint8>(alpha * 255.0f));
+    SDL_SetTextureBlendMode(texture, alpha >= 1.0f ? SDL_BLENDMODE_NONE : SDL_BLENDMODE_BLEND);
+
+    SDL_FRect dst{dest.position.x, dest.position.y, dest.size.x, dest.size.y};
+    SDL_RenderTexture(m_Renderer, texture, nullptr, &dst);
 }
 
 void Renderer::DrawText(const Rect& rect, std::string_view text, const flachead::graphics::Font& font, const Color& color)

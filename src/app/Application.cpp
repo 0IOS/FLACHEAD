@@ -7,6 +7,11 @@
 #include "../dap/SettingsScreen.hpp"
 #include "../playback/QueueManager.hpp"
 #include "../screens/HomeScreen.hpp"
+#include "../shell/AmbientHomeScreen.hpp"
+#include "../shell/LauncherScreen.hpp"
+#include "../shell/ShellScreen.hpp"
+#include "../shell/TaskOverviewScreen.hpp"
+#include "../shell/UniversalSearchScreen.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -121,12 +126,146 @@ bool Application::Initialize()
     m_Canvas = new flachead::ui::Canvas(m_Renderer, m_FontManager, m_ThemeManager);
 
     SetupServices();
-    RegisterScreens(m_AppContext);
+    SetupShellInput();
+    RegisterScreens();
 
     m_ScreenManager.Push("home");
     m_Running = true;
 
     return true;
+}
+
+void Application::SetupShellInput()
+{
+    const flachead::system::WindowSize size = m_Window.GetSize();
+    m_InputManager.Initialize();
+    m_InputManager.SetWindowSize(size.width, size.height);
+    m_InputManager.SetInputEventCallback([this](const flachead::input::InputEvent& event) {
+        if (auto* screen = m_ScreenManager.Current())
+        {
+            screen->OnInputEvent(event);
+        }
+    });
+    m_InputManager.SetCommandCallback([this](flachead::commands::Command command) {
+        OnSystemCommand(command);
+    });
+
+    m_ShellServices.app = m_AppContext;
+    m_ShellServices.renderer = &m_Renderer;
+    m_ShellServices.themes = &m_ThemeManager;
+    m_ShellServices.overlays = &m_Overlays;
+    m_ShellServices.wallpaper = &m_Wallpaper;
+    m_ShellServices.animations = &m_Animations;
+    m_ShellServices.focus = &m_Focus;
+    m_ShellServices.screens = &m_ScreenManager;
+
+    m_CommandCenter.Register(
+        [this](flachead::commands::Command command) { return HandleSystemCommand(command); }, 0);
+}
+
+void Application::OnSystemCommand(flachead::commands::Command command)
+{
+    if (auto* screen = m_ScreenManager.Current())
+    {
+        if (screen->OnCommand(command))
+        {
+            return;
+        }
+    }
+    m_CommandCenter.Dispatch(command);
+}
+
+bool Application::HandleSystemCommand(flachead::commands::Command command)
+{
+    switch (command)
+    {
+        case flachead::commands::Command::Back:
+            // Legacy DAP screens already pop themselves on the raw Escape key;
+            // applying Back here too would pop two screens. The shell handles
+            // Back through its own OnShellCommand when it wants it.
+            if (IsShellTop() && m_ScreenManager.Depth() > 1)
+            {
+                m_ScreenManager.Pop();
+            }
+            return true;
+        case flachead::commands::Command::Launcher:
+            if (m_ScreenManager.Top() != "launcher")
+            {
+                m_ScreenManager.Push("launcher");
+            }
+            return true;
+        case flachead::commands::Command::Home:
+            m_ScreenManager.PopTo("home");
+            return true;
+        case flachead::commands::Command::TaskOverview:
+            if (m_ScreenManager.Top() != "taskoverview")
+            {
+                m_ScreenManager.Push("taskoverview");
+            }
+            return true;
+        case flachead::commands::Command::OpenSettings:
+            if (m_ScreenManager.Top() != "dapsettings")
+            {
+                m_ScreenManager.Push("dapsettings");
+            }
+            return true;
+        case flachead::commands::Command::OpenSearch:
+            if (m_ScreenManager.Top() != "universal_search")
+            {
+                m_ScreenManager.Push("universal_search");
+            }
+            return true;
+        case flachead::commands::Command::OpenQueue:
+            if (m_ScreenManager.Top() != "queue")
+            {
+                m_ScreenManager.Push("queue");
+            }
+            return true;
+        case flachead::commands::Command::Shutdown:
+            m_Running = false;
+            return true;
+        default:
+            break;
+    }
+
+    // Playback commands are only applied globally when the shell owns the
+    // screen; legacy DAP screens still handle media keys from their raw SDL
+    // event path, and applying them again here would double-toggle.
+    if (IsShellTop())
+    {
+        switch (command)
+        {
+            case flachead::commands::Command::PlayPause:
+                m_Playback.Toggle();
+                return true;
+            case flachead::commands::Command::Next:
+                m_Playback.Next();
+                return true;
+            case flachead::commands::Command::Previous:
+                m_Playback.Previous();
+                return true;
+            case flachead::commands::Command::ToggleShuffle:
+                m_Playback.ToggleShuffle();
+                return true;
+            case flachead::commands::Command::ToggleRepeat:
+                m_Playback.ToggleRepeat();
+                return true;
+            case flachead::commands::Command::VolumeUp:
+                m_Playback.SetVolume(std::min(1.0f, m_Playback.Volume() + 0.05f));
+                return true;
+            case flachead::commands::Command::VolumeDown:
+                m_Playback.SetVolume(std::max(0.0f, m_Playback.Volume() - 0.05f));
+                return true;
+            default:
+                break;
+        }
+    }
+    return false;
+}
+
+bool Application::IsShellTop() const
+{
+    return dynamic_cast<flachead::shell::ShellScreen*>(m_ScreenManager.Current()) != nullptr;
 }
 
 void Application::SetupServices()
@@ -203,14 +342,22 @@ void Application::SetupServices()
     }
 }
 
-void Application::RegisterScreens(const flachead::dap::AppContext& context)
+void Application::RegisterScreens()
 {
-    m_ScreenManager.RegisterFactory("home", [this, context] {
-        auto screen = std::make_unique<flachead::dap::HomeScreen>(context);
-        screen->SetBackHandler([this] { m_Running = false; });
-        return screen;
+    m_ScreenManager.RegisterFactory("home", [this] {
+        return std::make_unique<flachead::shell::AmbientHomeScreen>(m_ShellServices);
+    });
+    m_ScreenManager.RegisterFactory("launcher", [this] {
+        return std::make_unique<flachead::shell::LauncherScreen>(m_ShellServices);
+    });
+    m_ScreenManager.RegisterFactory("taskoverview", [this] {
+        return std::make_unique<flachead::shell::TaskOverviewScreen>(m_ShellServices);
+    });
+    m_ScreenManager.RegisterFactory("universal_search", [this] {
+        return std::make_unique<flachead::shell::UniversalSearchScreen>(m_ShellServices);
     });
 
+    const flachead::dap::AppContext& context = m_AppContext;
     m_ScreenManager.RegisterFactory("nowplaying", [context] {
         return std::make_unique<flachead::dap::NowPlayingScreen>(context);
     });
@@ -326,6 +473,7 @@ void Application::Run()
         }
 
         m_Animator.Tick(deltaSeconds);
+        m_Animations.Tick(deltaSeconds);
         m_AppManager.Tick(deltaSeconds);
         m_AudioService.PollBackendEvents();
         m_Playback.Update(deltaSeconds);
@@ -339,14 +487,20 @@ void Application::Run()
                 handled = true;
                 return;
             }
+            m_InputManager.HandleEvent(event);
             if (auto* screen = m_ScreenManager.Current())
             {
                 handled = screen->HandleEvent(event) || handled;
             }
         });
+        m_InputManager.Update();
 
         const flachead::system::WindowSize size = m_Window.GetSize();
         const bool resized = size.width != lastWidth || size.height != lastHeight;
+        if (resized)
+        {
+            m_InputManager.SetWindowSize(size.width, size.height);
+        }
         lastWidth = size.width;
         lastHeight = size.height;
 

@@ -133,6 +133,26 @@ void GestureRecognizer::OnRelease(const Vec2& position, uint64_t timestampMs)
     m_LastReleasePosition = position;
 }
 
+void GestureRecognizer::Update(uint64_t nowMs)
+{
+    if (!m_Down || m_HoldEmitted)
+    {
+        return;
+    }
+    if (nowMs - m_DownTimeMs < m_Config.holdDelayMs)
+    {
+        return;
+    }
+    const float moved = Distance(m_LastPosition, m_DownPosition);
+    if (moved >= m_Config.tapMaxMove)
+    {
+        return;
+    }
+    m_HoldEmitted = true;
+    m_TapCount = 0;
+    Emit(GestureType::Hold, m_LastPosition, Vec2{}, 0.0f);
+}
+
 void GestureRecognizer::Cancel()
 {
     m_Down = false;

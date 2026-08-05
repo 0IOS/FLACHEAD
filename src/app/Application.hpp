@@ -1,17 +1,21 @@
 #pragma once
 
 #include "../animation/Animator.hpp"
+#include "../animation/AnimationManager.hpp"
 #include "../app/AppManager.hpp"
 #include "../audio/AudioService.hpp"
+#include "../commands/CommandCenter.hpp"
 #include "../core/Logger.hpp"
 #include "../core/Renderer.hpp"
 #include "../database/Database.hpp"
 #include "../dap/AppContext.hpp"
 #include "../events/EventBus.hpp"
 #include "../filesystem/FileSystem.hpp"
+#include "../focus/FocusManager.hpp"
 #include "../graphics/FontManager.hpp"
 #include "../input/GpioInputBackend.hpp"
 #include "../input/InputBackend.hpp"
+#include "../input/InputManager.hpp"
 #include "../input/SdlInputBackend.hpp"
 #include "../library/LibraryService.hpp"
 #include "../playback/PlaybackController.hpp"
@@ -23,9 +27,12 @@
 #include "../models/SettingsModel.hpp"
 #include "../services/SettingsManager.hpp"
 #include "../services/StorageManager.hpp"
+#include "../shell/ShellServices.hpp"
 #include "../system/Window.hpp"
+#include "../ui/overlay/OverlayManager.hpp"
 #include "../ui/theme/ThemeManager.hpp"
 #include "../ui/Canvas.hpp"
+#include "../ui/wallpaper/WallpaperManager.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -44,10 +51,14 @@ public:
     void Shutdown();
 
 private:
-    void RegisterScreens(const flachead::dap::AppContext& context);
+    void RegisterScreens();
     void SetupServices();
+    void SetupShellInput();
     void RenderFrame(int width, int height);
     void UpdateFrameTier(float renderMs);
+    void OnSystemCommand(flachead::commands::Command command);
+    bool HandleSystemCommand(flachead::commands::Command command);
+    bool IsShellTop() const;
 
     flachead::events::EventBus m_EventBus;
     flachead::system::Window m_Window;
@@ -74,6 +85,14 @@ private:
     flachead::animation::Animator m_Animator;
     flachead::dap::AppContext m_AppContext;
     std::vector<std::string> m_ScanRoots;
+
+    flachead::input::InputManager m_InputManager;
+    flachead::commands::CommandCenter m_CommandCenter;
+    flachead::animation::AnimationManager m_Animations;
+    flachead::ui::overlay::OverlayManager m_Overlays;
+    flachead::ui::wallpaper::WallpaperManager m_Wallpaper{m_Renderer};
+    flachead::focus::FocusManager m_Focus;
+    flachead::shell::ShellServices m_ShellServices;
 
     float m_BenchmarkSeconds{0.0f};
     float m_FpsAccumulator{0.0f};

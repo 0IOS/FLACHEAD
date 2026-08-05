@@ -18,6 +18,8 @@ endif()
 find_package(SDL3 REQUIRED CONFIG)
 find_package(SDL3_ttf REQUIRED CONFIG)
 find_package(SDL3_image QUIET CONFIG)
+find_package(PNG REQUIRED)
+find_package(JPEG REQUIRED)
 
 add_executable(FLACHEAD
     src/main.cpp
@@ -48,6 +50,7 @@ add_executable(FLACHEAD
     src/focus/FocusManager.cpp
     src/graphics/Font.cpp
     src/graphics/FontManager.cpp
+    src/graphics/ImageCodec.cpp
     src/graphics/Sprite.cpp
     src/graphics/Texture.cpp
     src/graphics/TextureCache.cpp
@@ -95,6 +98,7 @@ add_executable(FLACHEAD
     src/ui/ScrollBar.cpp
     src/ui/ScrollView.cpp
     src/ui/Slider.cpp
+    src/ui/TextField.cpp
     src/ui/Toast.cpp
     src/ui/Widget.cpp
     src/views/AlbumArtWidget.cpp
@@ -113,11 +117,18 @@ add_executable(FLACHEAD
     src/playback/PlaybackController.cpp
     src/playback/PlaylistEngine.cpp
     src/playback/QueueManager.cpp
+    src/shell/ShellScreen.cpp
+    src/shell/AmbientHomeScreen.cpp
+    src/shell/LauncherScreen.cpp
+    src/shell/TaskOverviewScreen.cpp
+    src/shell/UniversalSearchScreen.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE 
     SDL3::SDL3 
     SDL3_ttf::SDL3_ttf
     sqlite3
+    PNG::PNG
+    JPEG::JPEG
 )
 target_include_directories(FLACHEAD PRIVATE third_party/mpv/include)
 

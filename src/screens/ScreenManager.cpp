@@ -45,6 +45,15 @@ void ScreenManager::Pop()
     m_Stack.pop_back();
 }
 
+void ScreenManager::PopTo(std::string_view name)
+{
+    const std::string key{name};
+    while (!m_Stack.empty() && m_Stack.back() != key)
+    {
+        Pop();
+    }
+}
+
 void ScreenManager::Clear()
 {
     while (!m_Stack.empty())

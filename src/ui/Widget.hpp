@@ -86,14 +86,15 @@ public:
     void SetPressed(bool pressed);
     void SetHovered(bool hovered);
 
+    // Hit testing. Returns the topmost visible child under `point`, or null.
+    Widget* ChildAtPoint(const Vec2& point);
+
 protected:
     virtual void OnFocusGained() {}
     virtual void OnFocusLost() {}
     virtual void OnUpdate(float deltaSeconds) { (void)deltaSeconds; }
     virtual void OnDraw(Canvas& canvas) { (void)canvas; }
     virtual bool OnHandleEvent(const flachead::input::InputEvent& event) { (void)event; return false; }
-
-    Widget* ChildAtPoint(const Vec2& point);
 
 protected:
     std::string m_Id;

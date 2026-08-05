@@ -46,6 +46,7 @@ public:
     void RegisterFactory(std::string name, Factory factory);
     void Push(std::string_view name);
     void Pop();
+    void PopTo(std::string_view name);
     void Clear();
     Screen* Current() const;
     void Update(float deltaSeconds);
@@ -55,6 +56,7 @@ public:
     bool IsOnStack(std::string_view name) const;
     int Depth() const { return static_cast<int>(m_Stack.size()); }
     std::string_view Top() const { return m_Stack.empty() ? std::string_view{} : m_Stack.back(); }
+    const std::vector<std::string>& Stack() const { return m_Stack; }
 
 private:
     std::unordered_map<std::string, Factory> m_Factories;

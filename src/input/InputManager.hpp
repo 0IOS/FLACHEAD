@@ -29,13 +29,18 @@ public:
     void Initialize();
     void Shutdown();
 
+    // The logical window size. Touch coordinates arrive normalized (0..1) and
+    // are converted to pixels using this.
+    void SetWindowSize(int width, int height);
+
     void SetInputEventCallback(InputEventCallback callback) { m_InputEventCallback = std::move(callback); }
     void SetCommandCallback(CommandCallback callback) { m_CommandCallback = std::move(callback); }
 
     // Process one raw SDL event. Call once per event from the input backend.
     void HandleEvent(const SDL_Event& event);
 
-    // Fire any pending timed commands (single home-tap disambiguation).
+    // Fire any pending timed commands (single home-tap disambiguation) and
+    // drive the gesture recognizer's hold timer.
     void Update();
 
     bool IsTouchActive() const { return m_TouchDown; }
@@ -55,6 +60,8 @@ private:
 
     bool m_TouchDown{false};
     InputSource m_PointerSource{InputSource::Touch};
+    int m_WindowWidth{320};
+    int m_WindowHeight{240};
 
     bool m_HomeDown{false};
     uint64_t m_HomeDownTimeMs{0};
