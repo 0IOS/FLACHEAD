@@ -56,6 +56,7 @@ void InputManager::Initialize()
     m_HomeDown = false;
     m_HomeTapCount = 0;
     m_HomePending = false;
+    m_LastHomeReleaseValid = false;
 }
 
 void InputManager::Shutdown()
@@ -64,6 +65,7 @@ void InputManager::Shutdown()
     m_TouchDown = false;
     m_HomeDown = false;
     m_HomePending = false;
+    m_LastHomeReleaseValid = false;
 }
 
 void InputManager::EmitInput(const InputEvent& event)
@@ -139,6 +141,7 @@ void InputManager::HandleHomeKey(bool down)
             m_HomeHoldEmitted = true;
             m_HomeTapCount = 0;
             m_HomePending = false;
+            m_LastHomeReleaseValid = false;
             EmitCommand(commands::Command::TaskOverview);
         }
         return;
@@ -152,19 +155,22 @@ void InputManager::HandleHomeKey(bool down)
     if (m_HomeHoldEmitted)
     {
         m_HomeHoldEmitted = false;
+        m_LastHomeReleaseValid = false;
         return;
     }
 
     const uint64_t heldMs = nowMs - m_HomeDownTimeMs;
     if (heldMs >= m_Config.holdDelayMs)
     {
+        m_LastHomeReleaseValid = false;
         return;
     }
 
-    if (nowMs - m_LastHomeReleaseMs <= m_Config.doubleTapWindowMs)
+    if (m_LastHomeReleaseValid && nowMs - m_LastHomeReleaseMs <= m_Config.doubleTapWindowMs)
     {
         m_HomePending = false;
         m_HomeTapCount = 0;
+        m_LastHomeReleaseValid = true;
         EmitCommand(commands::Command::Home);
         m_LastHomeReleaseMs = nowMs;
         return;
@@ -174,6 +180,17 @@ void InputManager::HandleHomeKey(bool down)
     m_HomePending = true;
     m_HomePendingSinceMs = nowMs;
     m_LastHomeReleaseMs = nowMs;
+    m_LastHomeReleaseValid = true;
+
+    // Announce the pending single-tap action so the shell can hint that a
+    // second tap within the window would go Home. The real Launcher command
+    // fires when the window expires (see Update()).
+    InputEvent pendingEvent;
+    pendingEvent.action = InputAction::Tap;
+    pendingEvent.source = InputSource::Gpio;
+    pendingEvent.command = commands::Command::Launcher;
+    pendingEvent.position = Vec2{-1.0f, -1.0f};
+    EmitInput(pendingEvent);
 }
 
 void InputManager::Update()

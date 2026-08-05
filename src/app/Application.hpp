@@ -30,6 +30,7 @@
 #include "../services/NotificationManager.hpp"
 #include "../services/SettingsManager.hpp"
 #include "../services/StorageManager.hpp"
+#include "../shell/ScreenTransitionManager.hpp"
 #include "../shell/ShellServices.hpp"
 #include "../system/Window.hpp"
 #include "../ui/overlay/OverlayManager.hpp"
@@ -100,6 +101,7 @@ private:
     flachead::ui::wallpaper::WallpaperManager m_Wallpaper{m_Renderer};
     flachead::focus::FocusManager m_Focus;
     flachead::shell::ShellServices m_ShellServices;
+    flachead::shell::ScreenTransitionManager m_Transitions;
 
     float m_BenchmarkSeconds{0.0f};
     float m_FpsAccumulator{0.0f};

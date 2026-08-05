@@ -129,8 +129,13 @@ void SystemScreen::RefreshLabels()
 
 void SystemScreen::OnShellUpdate(float deltaSeconds)
 {
-    (void)deltaSeconds;
-    RefreshLabels();
+    m_RefreshAccumulator += deltaSeconds;
+    if (m_RefreshAccumulator >= 0.5f)
+    {
+        m_RefreshAccumulator = 0.0f;
+        RefreshLabels();
+        MarkDirty();
+    }
 }
 
 bool SystemScreen::OnShellCommand(flachead::commands::Command command)

@@ -22,5 +22,6 @@ private:
     void RefreshLabels();
 
     std::vector<std::string> m_InfoButtonIds;
+    float m_RefreshAccumulator{0.0f};
 };
 } // namespace flachead::shell

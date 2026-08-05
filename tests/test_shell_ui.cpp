@@ -5,12 +5,16 @@
 #include "../src/focus/FocusManager.hpp"
 #include "../src/input/GestureRecognizer.hpp"
 #include "../src/input/InputEvent.hpp"
+#include "../src/input/InputManager.hpp"
 #include "../src/layout/BoxLayout.hpp"
 #include "../src/layout/GridLayout.hpp"
 #include "../src/layout/LayoutEngine.hpp"
 #include "../src/math/Rect.hpp"
 #include "../src/math/Vec2.hpp"
+#include "../src/shell/ScreenTransitionManager.hpp"
 #include "test_util.hpp"
+
+#include <SDL3/SDL.h>
 
 #include <cmath>
 
@@ -308,10 +312,116 @@ void TestDominantColors()
         Check(hue < 20.0f || hue > 340.0f, "dominant hue near red for red image");
     }
 }
+
+void TestScreenTransitionFade()
+{
+    flachead::shell::ScreenTransitionManager transition;
+    Check(!transition.Active(), "transition idle by default");
+    Check(!transition.NeedsRender(), "no render demand when idle");
+
+    transition.BeginFade(0.2f);
+    Check(transition.Active(), "transition starts active");
+    Check(Approx(transition.Alpha(), 1.0f), "fade starts fully covered");
+
+    transition.Update(0.1f);
+    const float halfway = transition.Alpha();
+    Check(halfway > 0.0f && halfway < 1.0f, "fade eases through mid values");
+
+    transition.Update(0.2f);
+    Check(!transition.Active(), "transition finishes");
+    Check(Approx(transition.Alpha(), 0.0f), "fade reaches transparent");
+    Check(!transition.NeedsRender(), "no render demand after finish");
+}
+
+void TestHomeTapOpensLauncher()
+{
+    flachead::input::GestureConfig config;
+    config.doubleTapWindowMs = 0;
+    config.holdDelayMs = 1000;
+    flachead::input::InputManager manager(config);
+    manager.Initialize();
+
+    std::vector<flachead::input::InputEvent> inputs;
+    std::vector<flachead::commands::Command> commands;
+    manager.SetInputEventCallback([&](const flachead::input::InputEvent& event) { inputs.push_back(event); });
+    manager.SetCommandCallback([&](flachead::commands::Command command) { commands.push_back(command); });
+
+    SDL_Event down{};
+    down.type = SDL_EVENT_KEY_DOWN;
+    down.key.key = SDLK_HOME;
+    SDL_Event up{};
+    up.type = SDL_EVENT_KEY_UP;
+    up.key.key = SDLK_HOME;
+    manager.HandleEvent(down);
+    manager.HandleEvent(up);
+
+    Check(inputs.size() == 1, "single home tap emits one signal event");
+    if (!inputs.empty())
+    {
+        Check(inputs[0].command == flachead::commands::Command::Launcher,
+              "pending single tap signals the launcher command");
+    }
+
+    manager.Update();
+    Check(std::find(commands.begin(), commands.end(), flachead::commands::Command::Launcher) != commands.end(),
+          "launcher command fires after the single-tap window");
+}
+
+void TestHomeDoubleTapGoesHome()
+{
+    flachead::input::GestureConfig config;
+    config.doubleTapWindowMs = 1000;
+    config.holdDelayMs = 1000;
+    flachead::input::InputManager manager(config);
+    manager.Initialize();
+
+    std::vector<flachead::commands::Command> commands;
+    manager.SetCommandCallback([&](flachead::commands::Command command) { commands.push_back(command); });
+
+    SDL_Event down{};
+    down.type = SDL_EVENT_KEY_DOWN;
+    down.key.key = SDLK_HOME;
+    SDL_Event up{};
+    up.type = SDL_EVENT_KEY_UP;
+    up.key.key = SDLK_HOME;
+    manager.HandleEvent(down);
+    manager.HandleEvent(up);
+    manager.HandleEvent(down);
+    manager.HandleEvent(up);
+
+    Check(std::find(commands.begin(), commands.end(), flachead::commands::Command::Home) != commands.end(),
+          "double home tap emits Home");
+}
+
+void TestHomeHoldOpensTaskOverview()
+{
+    flachead::input::GestureConfig config;
+    config.doubleTapWindowMs = 1000;
+    config.holdDelayMs = 0;
+    flachead::input::InputManager manager(config);
+    manager.Initialize();
+
+    std::vector<flachead::commands::Command> commands;
+    manager.SetCommandCallback([&](flachead::commands::Command command) { commands.push_back(command); });
+
+    SDL_Event down{};
+    down.type = SDL_EVENT_KEY_DOWN;
+    down.key.key = SDLK_HOME;
+    SDL_Event up{};
+    up.type = SDL_EVENT_KEY_UP;
+    up.key.key = SDLK_HOME;
+    manager.HandleEvent(down);
+    manager.HandleEvent(up);
+
+    Check(std::find(commands.begin(), commands.end(), flachead::commands::Command::TaskOverview)
+              != commands.end(),
+          "home hold emits TaskOverview");
+}
 } // namespace
 
 int main()
 {
+    SDL_Init(0);
     RunTest("BoxLayout stretch/fixed/spacing", TestBoxLayoutStretch);
     RunTest("BoxLayout alignment", TestBoxLayoutAlignment);
     RunTest("BoxLayout measure", TestBoxLayoutMeasure);
@@ -333,5 +443,9 @@ int main()
     RunTest("Palette contrast ratio", TestContrastRatio);
     RunTest("Palette derivation", TestPaletteDerivation);
     RunTest("Palette dominant colors", TestDominantColors);
+    RunTest("Screen transition fade", TestScreenTransitionFade);
+    RunTest("Home tap opens launcher", TestHomeTapOpensLauncher);
+    RunTest("Home double tap goes home", TestHomeDoubleTapGoesHome);
+    RunTest("Home hold opens task overview", TestHomeHoldOpensTaskOverview);
     return Finish();
 }

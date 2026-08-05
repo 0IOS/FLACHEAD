@@ -127,6 +127,7 @@ add_executable(FLACHEAD
     src/shell/TaskOverviewScreen.cpp
     src/shell/UniversalSearchScreen.cpp
     src/shell/SettingsScreen.cpp
+    src/shell/ScreenTransitionManager.cpp
     src/shell/SystemScreen.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE 
@@ -246,10 +247,12 @@ if(FLACHEAD_BUILD_TESTS)
         src/focus/FocusManager.cpp
         src/input/GestureRecognizer.cpp
         src/input/InputEvent.cpp
+        src/input/InputManager.cpp
         src/layout/BoxLayout.cpp
         src/layout/GridLayout.cpp
         src/layout/LayoutEngine.cpp
         src/math/Color.cpp
+        src/shell/ScreenTransitionManager.cpp
         src/ui/palette/Palette.cpp
     )
     target_compile_features(flachead_test_shell_ui PRIVATE cxx_std_20)

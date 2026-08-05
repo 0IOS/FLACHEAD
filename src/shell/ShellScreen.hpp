@@ -70,6 +70,10 @@ protected:
     void FocusInitial();
     void SetFocusedWidget(std::string_view id);
 
+    // Handles synthetic command-carrying input (e.g. a pending home tap) that
+    // must not be dispatched to widgets.
+    void HandleCommandSignal(const flachead::input::InputEvent& event);
+
     const std::unordered_map<std::string, flachead::ui::Widget*>& WidgetsById() const { return m_WidgetsById; }
 
 private:

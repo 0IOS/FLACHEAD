@@ -1,6 +1,7 @@
 #include "ShellScreen.hpp"
 
 #include "../ui/Button.hpp"
+#include "../ui/Label.hpp"
 
 #include <algorithm>
 
@@ -132,6 +133,11 @@ void ShellScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 
 void ShellScreen::OnInputEvent(const flachead::input::InputEvent& event)
 {
+    if (event.command != flachead::commands::Command::None)
+    {
+        HandleCommandSignal(event);
+        return;
+    }
     if (!Overlays().IsEmpty())
     {
         if (event.action == flachead::input::InputAction::Tap)
@@ -145,6 +151,21 @@ void ShellScreen::OnInputEvent(const flachead::input::InputEvent& event)
         return;
     }
     OnShellInput(event);
+}
+
+void ShellScreen::HandleCommandSignal(const flachead::input::InputEvent& event)
+{
+    if (event.command != flachead::commands::Command::Launcher || Overlays().Has("home.hint"))
+    {
+        return;
+    }
+
+    // A single hardware home tap is pending; hint that a second tap goes Home.
+    auto hint = std::make_shared<flachead::ui::Label>();
+    hint->SetText("Launcher ready - double-tap for Home");
+    hint->SetAlign(flachead::ui::Label::Align::Center);
+    Overlays().PushToast("home.hint", std::move(hint), flachead::ui::overlay::Layer::System);
+    MarkDirty();
 }
 
 bool ShellScreen::HandleWidgetInput(const flachead::input::InputEvent& event)
@@ -165,6 +186,10 @@ bool ShellScreen::HandleWidgetInput(const flachead::input::InputEvent& event)
 
 bool ShellScreen::OnCommand(flachead::commands::Command command)
 {
+    if (command == flachead::commands::Command::Launcher || command == flachead::commands::Command::Home)
+    {
+        Overlays().Dismiss("home.hint");
+    }
     if (HandleFocusCommand(command))
     {
         return true;

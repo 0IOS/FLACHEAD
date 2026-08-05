@@ -32,12 +32,15 @@ enum class InputAction
 };
 
 // Semantic input event produced by the InputManager from raw SDL events. The
-// UI consumes these; it never sees SDL_Event directly.
+// UI consumes these; it never sees SDL_Event directly. A non-None command
+// marks a synthetic, command-carrying event (e.g. a pending home-tap opening
+// the launcher) that the shell routes to its hint layer instead of widgets.
 struct InputEvent
 {
     InputAction action{InputAction::Tap};
     InputSource source{InputSource::Touch};
     SDL_Keycode key{0};
+    commands::Command command{commands::Command::None};
     Vec2 position;
     Vec2 delta;
     float velocity{0.0f};

@@ -66,6 +66,7 @@ private:
     bool m_HomeDown{false};
     uint64_t m_HomeDownTimeMs{0};
     uint64_t m_LastHomeReleaseMs{0};
+    bool m_LastHomeReleaseValid{false};
     int m_HomeTapCount{0};
     bool m_HomeHoldEmitted{false};
     bool m_HomePending{false};

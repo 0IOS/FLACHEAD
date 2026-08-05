@@ -204,39 +204,46 @@ bool Application::HandleSystemCommand(flachead::commands::Command command)
             // Back through its own OnShellCommand when it wants it.
             if (IsShellTop() && m_ScreenManager.Depth() > 1)
             {
+                m_Transitions.BeginFade();
                 m_ScreenManager.Pop();
             }
             return true;
         case flachead::commands::Command::Launcher:
             if (m_ScreenManager.Top() != "launcher")
             {
+                m_Transitions.BeginFade();
                 m_ScreenManager.Push("launcher");
             }
             return true;
         case flachead::commands::Command::Home:
+            m_Transitions.BeginFade();
             m_ScreenManager.PopTo("home");
             return true;
         case flachead::commands::Command::TaskOverview:
             if (m_ScreenManager.Top() != "taskoverview")
             {
+                m_Transitions.BeginFade();
                 m_ScreenManager.Push("taskoverview");
             }
             return true;
         case flachead::commands::Command::OpenSettings:
             if (m_ScreenManager.Top() != "settings")
             {
+                m_Transitions.BeginFade();
                 m_ScreenManager.Push("settings");
             }
             return true;
         case flachead::commands::Command::OpenSearch:
             if (m_ScreenManager.Top() != "universal_search")
             {
+                m_Transitions.BeginFade();
                 m_ScreenManager.Push("universal_search");
             }
             return true;
         case flachead::commands::Command::OpenQueue:
             if (m_ScreenManager.Top() != "queue")
             {
+                m_Transitions.BeginFade();
                 m_ScreenManager.Push("queue");
             }
             return true;
@@ -352,8 +359,14 @@ void Application::SetupServices()
     m_AppContext.settings = &m_SettingsManager;
     m_AppContext.playlists = &m_Playlists;
     m_AppContext.scanRoots = m_ScanRoots;
-    m_AppContext.navigate = [this](std::string_view name) { m_ScreenManager.Push(name); };
-    m_AppContext.goBack = [this] { m_ScreenManager.Pop(); };
+    m_AppContext.navigate = [this](std::string_view name) {
+        m_Transitions.BeginFade();
+        m_ScreenManager.Push(name);
+    };
+    m_AppContext.goBack = [this] {
+        m_Transitions.BeginFade();
+        m_ScreenManager.Pop();
+    };
 
     m_BackgroundJobs.Start();
     m_Memory.Initialize(
@@ -444,6 +457,15 @@ void Application::RenderFrame(int width, int height)
 {
     m_Renderer.BeginFrame();
     m_ScreenManager.Render(*m_Canvas, width, height);
+
+    const float transitionAlpha = m_Transitions.Alpha();
+    if (transitionAlpha > 0.0f)
+    {
+        m_Canvas->FillRect(
+            Rect{0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)},
+            Color{8, 10, 16, static_cast<std::uint8_t>(std::clamp(transitionAlpha, 0.0f, 1.0f) * 255.0f)});
+    }
+
     m_Renderer.EndFrame();
 }
 
@@ -519,6 +541,7 @@ void Application::Run()
         m_BackgroundJobs.Update();
         m_Notifications.Update();
         m_Memory.Update();
+        m_Transitions.Update(deltaSeconds);
 
         bool handled = false;
         m_InputBackend->Poll([this, &handled](const SDL_Event& event) {
@@ -549,7 +572,8 @@ void Application::Run()
         const bool minuteChanged = minute != lastMinute;
         lastMinute = minute;
 
-        if (handled || resized || minuteChanged || m_ScreenManager.NeedsRender() || m_BenchmarkSeconds > 0.0f)
+        if (handled || resized || minuteChanged || m_ScreenManager.NeedsRender() || m_Transitions.NeedsRender()
+            || m_BenchmarkSeconds > 0.0f)
         {
             const Uint64 renderStart = SDL_GetPerformanceCounter();
             RenderFrame(size.width, size.height);
