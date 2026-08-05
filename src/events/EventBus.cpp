@@ -28,15 +28,20 @@ void EventBus::Unsubscribe(int subscriptionId)
 
 void EventBus::Publish(const Event& event)
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    const auto it = m_Subscribers.find(event.type);
-    if (it == m_Subscribers.end())
+    std::vector<Subscription> subscriptions;
     {
-        return;
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        const auto it = m_Subscribers.find(event.type);
+        if (it == m_Subscribers.end())
+        {
+            return;
+        }
+        // Copy the list so handlers that subscribe/unsubscribe during dispatch
+        // do not invalidate the iterator, and so handlers that publish re-
+        // entrantly (nested events) do not deadlock on this mutex.
+        subscriptions = it->second;
     }
-    // Copy the list so handlers that subscribe/unsubscribe during dispatch
-    // do not invalidate the iterator.
-    const auto subscriptions = it->second;
+
     for (const auto& subscription : subscriptions)
     {
         if (subscription.handler)

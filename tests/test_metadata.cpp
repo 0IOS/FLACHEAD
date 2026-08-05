@@ -4,6 +4,8 @@
 #include "test_util.hpp"
 
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 
 using flachead::metadata::FFprobeExtractor;
@@ -13,8 +15,27 @@ using flachead::metadata::TrackMetadata;
 
 static bool g_HasFFprobe = false;
 
+static void EnsureTestFixture()
+{
+    if (std::FILE* file = std::fopen("/tmp/test_song.flac", "rb"))
+    {
+        std::fclose(file);
+        return;
+    }
+    // Regenerate the 5-second tagged FLAC the extractor tests rely on.
+    const int rc = std::system(
+        "ffmpeg -y -f lavfi -i sine=frequency=440:duration=5 -c:a flac "
+        "-metadata title=\"Test Song\" -metadata artist=\"Test Artist\" "
+        "-metadata album=\"Test Album\" -metadata genre=\"Rock\" "
+        "-metadata track=\"3/10\" -metadata date=\"2023\" "
+        "/tmp/test_song.flac > /dev/null 2>&1");
+    (void)rc;
+}
+
 int main()
 {
+    EnsureTestFixture();
+
     RunTest("json parser", [&] {
         JsonValue root;
         const char* text = R"({"title":"A","n":42,"pi":3.5,"ok":true,"arr":[1,"x",null],"obj":{"k":"v"},"uni":"\u00e9"})";

@@ -44,13 +44,14 @@ bool NullBackend::OpenMedia(std::string_view uri)
 bool NullBackend::QueueNext(std::string_view uri)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_Events.push_back(BackendEvent{BackendEvent::Kind::None, std::string{uri}, 0, {}});
+    m_QueuedUri = std::string{uri};
     return true;
 }
 
 void NullBackend::ClearQueue()
 {
-    // No queued playlist to manage in the null backend.
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_QueuedUri.clear();
 }
 
 void NullBackend::Play()
@@ -123,9 +124,20 @@ void NullBackend::Tick() const
 
     m_Position += elapsed;
 
-    // Emit an EndOfFile once the virtual track completes.
+    // Emit an EndOfFile once the virtual track completes. If a next track was
+    // preloaded via QueueNext, transition gaplessly instead (mirrors mpv).
     if (m_MediaLoaded && !m_Ended && m_Duration > 0.0 && m_Position >= m_Duration)
     {
+        if (!m_QueuedUri.empty())
+        {
+            m_Uri = m_QueuedUri;
+            m_QueuedUri.clear();
+            m_Position = 0.0;
+            m_Events.push_back(BackendEvent{BackendEvent::Kind::StartOfFile, m_Uri, 0, {}});
+            m_Events.push_back(BackendEvent{BackendEvent::Kind::FileLoaded, m_Uri, 0, {}});
+            return;
+        }
+
         m_Ended = true;
         m_Playing = false;
         m_Paused = true;

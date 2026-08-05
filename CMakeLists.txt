@@ -90,6 +90,9 @@ add_executable(FLACHEAD
     src/models/LibraryModel.cpp
     src/models/BatteryStateModel.cpp
     src/models/SettingsModel.cpp
+    src/playback/PlaybackController.cpp
+    src/playback/PlaylistEngine.cpp
+    src/playback/QueueManager.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE 
     SDL3::SDL3 
@@ -138,4 +141,22 @@ if(FLACHEAD_BUILD_TESTS)
     target_link_libraries(flachead_test_audio PRIVATE ${CMAKE_DL_LIBS})
     target_compile_features(flachead_test_audio PRIVATE cxx_std_20)
     add_test(NAME flachead_test_audio COMMAND flachead_test_audio)
+
+    add_executable(flachead_test_playback
+        tests/test_playback.cpp
+        src/playback/QueueManager.cpp
+        src/playback/PlaylistEngine.cpp
+        src/playback/PlaybackController.cpp
+        src/audio/AudioService.cpp
+        src/audio/MpvBackend.cpp
+        src/audio/NullBackend.cpp
+        src/database/Database.cpp
+        src/core/Logger.cpp
+        src/core/PathUtils.cpp
+        src/events/EventBus.cpp
+    )
+    target_include_directories(flachead_test_playback PRIVATE third_party/mpv/include)
+    target_link_libraries(flachead_test_playback PRIVATE sqlite3 ${CMAKE_DL_LIBS})
+    target_compile_features(flachead_test_playback PRIVATE cxx_std_20)
+    add_test(NAME flachead_test_playback COMMAND flachead_test_playback)
 endif()

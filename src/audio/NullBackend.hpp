@@ -44,13 +44,14 @@ private:
     mutable std::mutex m_Mutex;
     mutable std::deque<BackendEvent> m_Events;
     mutable Clock::time_point m_LastTick{Clock::now()};
-    std::string m_Uri;
+    mutable std::string m_Uri;
     mutable double m_Position{0.0};
     double m_Duration{0.0};
     mutable bool m_Playing{false};
     mutable bool m_Paused{true};
     bool m_MediaLoaded{false};
     mutable bool m_Ended{false};
+    mutable std::string m_QueuedUri;
     float m_Volume{1.0f};
 };
 } // namespace flachead::audio
