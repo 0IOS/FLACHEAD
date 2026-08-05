@@ -45,6 +45,9 @@ add_executable(FLACHEAD
     src/layout/Layout.cpp
     src/layout/ColumnLayout.cpp
     src/layout/RowLayout.cpp
+    src/library/AlbumArtExtractor.cpp
+    src/library/LibraryScanner.cpp
+    src/library/LibraryService.cpp
     src/math/Color.cpp
     src/metadata/FFprobeExtractor.cpp
     src/metadata/Json.cpp
@@ -114,10 +117,19 @@ if(FLACHEAD_BUILD_TESTS)
         src/core/Logger.cpp
         src/core/PathUtils.cpp
         src/events/EventBus.cpp
+        src/library/AlbumArtExtractor.cpp
+        src/library/LibraryScanner.cpp
+        src/library/LibraryService.cpp
         src/metadata/FFprobeExtractor.cpp
         src/metadata/Json.cpp
         src/metadata/Metadata.cpp
     )
+
+    add_executable(flachead_test_library tests/test_library.cpp ${FLACHEAD_TEST_CORE})
+    target_include_directories(flachead_test_library PRIVATE third_party/mpv/include)
+    target_link_libraries(flachead_test_library PRIVATE sqlite3 ${CMAKE_DL_LIBS})
+    target_compile_features(flachead_test_library PRIVATE cxx_std_20)
+    add_test(NAME flachead_test_library COMMAND flachead_test_library)
 
     add_executable(flachead_test_database tests/test_database.cpp ${FLACHEAD_TEST_CORE})
     target_link_libraries(flachead_test_database PRIVATE sqlite3)
