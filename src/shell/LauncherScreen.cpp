@@ -20,7 +20,7 @@ const std::vector<LauncherScreen::App>& LauncherScreen::Apps()
         {"Recent", "recent"},
         {"Playlists", "playlists"},
         {"Search", "universal_search"},
-        {"Settings", "dapsettings"},
+        {"Settings", "settings"},
         {"Queue", "queue"},
     };
     return kApps;

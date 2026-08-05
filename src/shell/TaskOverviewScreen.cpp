@@ -15,7 +15,7 @@ std::string FriendlyName(std::string_view key)
     static const std::vector<std::pair<std::string_view, std::string_view>> kNames = {
         {"nowplaying", "Now Playing"}, {"songs", "Songs"},   {"albums", "Albums"},
         {"artists", "Artists"},       {"favorites", "Favorites"}, {"recent", "Recent"},
-        {"playlists", "Playlists"},   {"universal_search", "Search"}, {"dapsettings", "Settings"},
+        {"playlists", "Playlists"},   {"universal_search", "Search"}, {"settings", "Settings"},
         {"launcher", "Launcher"},     {"queue", "Queue"},
     };
     for (const auto& [from, to] : kNames)
@@ -102,7 +102,7 @@ void TaskOverviewScreen::BuildOverview()
     settings->SetId("settings");
     settings->SetText("Settings");
     settings->SetFocusable(true);
-    settings->SetClickHandler([this] { Ctx().navigate("dapsettings"); });
+    settings->SetClickHandler([this] { Ctx().navigate("settings"); });
     row->AddChild(std::move(settings));
 }
 

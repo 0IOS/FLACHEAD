@@ -10,6 +10,8 @@
 #include "../shell/AmbientHomeScreen.hpp"
 #include "../shell/LauncherScreen.hpp"
 #include "../shell/ShellScreen.hpp"
+#include "../shell/SettingsScreen.hpp"
+#include "../shell/SystemScreen.hpp"
 #include "../shell/TaskOverviewScreen.hpp"
 #include "../shell/UniversalSearchScreen.hpp"
 #include <SDL3/SDL.h>
@@ -158,6 +160,7 @@ void Application::SetupShellInput()
     m_ShellServices.animations = &m_Animations;
     m_ShellServices.focus = &m_Focus;
     m_ShellServices.screens = &m_ScreenManager;
+    m_ShellServices.quit = [this] { m_Running = false; };
 
     m_CommandCenter.Register(
         [this](flachead::commands::Command command) { return HandleSystemCommand(command); }, 0);
@@ -204,9 +207,9 @@ bool Application::HandleSystemCommand(flachead::commands::Command command)
             }
             return true;
         case flachead::commands::Command::OpenSettings:
-            if (m_ScreenManager.Top() != "dapsettings")
+            if (m_ScreenManager.Top() != "settings")
             {
-                m_ScreenManager.Push("dapsettings");
+                m_ScreenManager.Push("settings");
             }
             return true;
         case flachead::commands::Command::OpenSearch:
@@ -355,6 +358,12 @@ void Application::RegisterScreens()
     });
     m_ScreenManager.RegisterFactory("universal_search", [this] {
         return std::make_unique<flachead::shell::UniversalSearchScreen>(m_ShellServices);
+    });
+    m_ScreenManager.RegisterFactory("settings", [this] {
+        return std::make_unique<flachead::shell::SettingsScreen>(m_ShellServices);
+    });
+    m_ScreenManager.RegisterFactory("system", [this] {
+        return std::make_unique<flachead::shell::SystemScreen>(m_ShellServices);
     });
 
     const flachead::dap::AppContext& context = m_AppContext;

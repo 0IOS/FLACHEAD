@@ -9,6 +9,8 @@
 #include "../ui/theme/ThemeManager.hpp"
 #include "../ui/wallpaper/WallpaperManager.hpp"
 
+#include <functional>
+
 namespace flachead::shell
 {
 // The services every operating-environment screen needs, bundled like the DAP
@@ -25,5 +27,8 @@ struct ShellServices
     flachead::animation::AnimationManager* animations{nullptr};
     flachead::focus::FocusManager* focus{nullptr};
     flachead::screens::ScreenManager* screens{nullptr};
+
+    // Requests a clean application exit (system screen power actions).
+    std::function<void()> quit;
 };
 } // namespace flachead::shell

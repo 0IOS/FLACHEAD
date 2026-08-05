@@ -122,6 +122,8 @@ add_executable(FLACHEAD
     src/shell/LauncherScreen.cpp
     src/shell/TaskOverviewScreen.cpp
     src/shell/UniversalSearchScreen.cpp
+    src/shell/SettingsScreen.cpp
+    src/shell/SystemScreen.cpp
 )
 target_link_libraries(FLACHEAD PRIVATE 
     SDL3::SDL3 

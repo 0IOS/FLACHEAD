@@ -166,7 +166,7 @@ void AmbientHomeScreen::BuildIdleView()
     (void)apps;
     auto find = MakeButton("Find", "find", *rowRaw, [this] { Ctx().navigate("universal_search"); });
     (void)find;
-    auto settings = MakeButton("Settings", "settings", *rowRaw, [this] { Ctx().navigate("dapsettings"); });
+    auto settings = MakeButton("Settings", "settings", *rowRaw, [this] { Ctx().navigate("settings"); });
     (void)settings;
 }
 
