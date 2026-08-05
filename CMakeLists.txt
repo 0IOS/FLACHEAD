@@ -51,6 +51,7 @@ add_executable(FLACHEAD
     src/graphics/Sprite.cpp
     src/graphics/Texture.cpp
     src/graphics/TextureCache.cpp
+    src/graphics/AssetManager.cpp
     src/input/GpioInputBackend.cpp
     src/input/GestureRecognizer.cpp
     src/input/InputEvent.cpp
@@ -74,6 +75,9 @@ add_executable(FLACHEAD
     src/services/StorageManager.cpp
     src/system/Window.cpp
     src/ui/theme/ThemeManager.cpp
+    src/ui/palette/Palette.cpp
+    src/ui/wallpaper/WallpaperManager.cpp
+    src/ui/overlay/OverlayManager.cpp
     src/ui/Button.cpp
     src/ui/Canvas.cpp
     src/ui/Card.cpp
@@ -228,6 +232,8 @@ if(FLACHEAD_BUILD_TESTS)
         src/layout/BoxLayout.cpp
         src/layout/GridLayout.cpp
         src/layout/LayoutEngine.cpp
+        src/math/Color.cpp
+        src/ui/palette/Palette.cpp
     )
     target_compile_features(flachead_test_shell_ui PRIVATE cxx_std_20)
     target_link_libraries(flachead_test_shell_ui PRIVATE SDL3::SDL3)

@@ -1,5 +1,7 @@
 #include "Canvas.hpp"
 
+#include "palette/Palette.hpp"
+
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include <algorithm>
@@ -14,29 +16,7 @@ namespace
 {
 Color ParseColor(std::string_view value)
 {
-    if (value.size() != 7 || value[0] != '#')
-    {
-        return Color::White;
-    }
-
-    const auto parseByte = [](char high, char low) -> uint8_t {
-        auto toValue = [](char c) -> uint8_t {
-            if (c >= '0' && c <= '9')
-                return static_cast<uint8_t>(c - '0');
-            if (c >= 'a' && c <= 'f')
-                return static_cast<uint8_t>(10 + c - 'a');
-            if (c >= 'A' && c <= 'F')
-                return static_cast<uint8_t>(10 + c - 'A');
-            return 0;
-        };
-        return static_cast<uint8_t>((toValue(high) << 4) | toValue(low));
-    };
-
-    return Color{
-        parseByte(value[1], value[2]),
-        parseByte(value[3], value[4]),
-        parseByte(value[5], value[6]),
-        255};
+    return flachead::palette::ParseHex(value);
 }
 
 constexpr std::string_view kFallbackFont = "/usr/share/fonts/google-noto-vf/NotoSans[wght].ttf";

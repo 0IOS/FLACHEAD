@@ -1,3 +1,5 @@
+#include "../src/ui/palette/Palette.hpp"
+
 #include "../src/animation/AnimationManager.hpp"
 #include "../src/commands/CommandCenter.hpp"
 #include "../src/focus/FocusManager.hpp"
@@ -230,6 +232,82 @@ void TestKeyToCommand()
     Check(flachead::input::KeyToCommand(SDLK_MEDIA_NEXT_TRACK) == Command::Next,
           "media next maps to Next");
 }
+
+void TestParseHex()
+{
+    const Color c = flachead::palette::ParseHex("#7c3aed");
+    Check(c.r == 0x7c && c.g == 0x3a && c.b == 0xed && c.a == 255, "parses #rrggbb");
+    const Color rgba = flachead::palette::ParseHex("#7c3aed80");
+    Check(rgba.a == 0x80, "parses #rrggbbaa");
+    const Color bad = flachead::palette::ParseHex("nonsense");
+    Check(bad.r == 0 && bad.g == 0 && bad.b == 0, "malformed hex returns black");
+}
+
+void TestHslRoundTrip()
+{
+    const Color original{100, 150, 200, 255};
+    const flachead::palette::Hsl hsl = flachead::palette::ColorUtil::ToHsl(original);
+    const Color round = flachead::palette::ColorUtil::FromHsl(hsl);
+    Check(std::abs(static_cast<int>(round.r) - original.r) <= 1 &&
+          std::abs(static_cast<int>(round.g) - original.g) <= 1 &&
+          std::abs(static_cast<int>(round.b) - original.b) <= 1,
+          "hsl round trip within 1 channel unit");
+}
+
+void TestColorMix()
+{
+    const Color mixed = flachead::palette::ColorUtil::Mix(Color::Black, Color::White, 0.5f);
+    Check(mixed.r == 128 && mixed.g == 128 && mixed.b == 128, "mix midpoint is gray");
+    const Color lightened = flachead::palette::ColorUtil::Lighten(Color::Black, 0.5f);
+    Check(lightened.r > 100, "lightening black raises channels");
+}
+
+void TestContrastRatio()
+{
+    const float ratio = flachead::palette::ColorUtil::ContrastRatio(Color::Black, Color::White);
+    Check(ratio > 15.0f, "black/white contrast is high");
+    const float same = flachead::palette::ColorUtil::ContrastRatio(Color::White, Color::White);
+    Check(same > 0.9f && same < 1.1f, "identical colors have ratio ~1");
+}
+
+void TestPaletteDerivation()
+{
+    const flachead::palette::Palette dark = flachead::palette::Palette::FromSeed(Color{124, 58, 237}, true);
+    Check(dark.accent.r == 124 && dark.accent.g == 58 && dark.accent.b == 237, "accent preserved");
+    const float bgLum = flachead::palette::ColorUtil::Luminance(dark.background);
+    const float fgLum = flachead::palette::ColorUtil::Luminance(dark.foreground);
+    Check(bgLum < 0.05f, "dark theme has dark background");
+    Check(fgLum > 0.7f, "dark theme has light foreground");
+    Check(flachead::palette::ColorUtil::ContrastRatio(dark.foreground, dark.background) > 10.0f,
+          "foreground contrasts with background");
+
+    const flachead::palette::Palette light = flachead::palette::Palette::FromSeed(Color{124, 58, 237}, false);
+    Check(flachead::palette::ColorUtil::Luminance(light.background) > 0.8f, "light theme has light background");
+    Check(flachead::palette::ColorUtil::Luminance(light.foreground) < 0.05f, "light theme has dark foreground");
+}
+
+void TestDominantColors()
+{
+    std::vector<uint8_t> pixels;
+    constexpr int width = 64;
+    constexpr int height = 64;
+    pixels.resize(static_cast<std::size_t>(width) * height * 4);
+    for (std::size_t i = 0; i < pixels.size(); i += 4)
+    {
+        pixels[i] = 220;
+        pixels[i + 1] = 40;
+        pixels[i + 2] = 80;
+        pixels[i + 3] = 255;
+    }
+    const auto colors = flachead::palette::ExtractDominantColors(pixels.data(), width, height);
+    Check(!colors.empty(), "dominant colors found");
+    if (!colors.empty())
+    {
+        const auto first = colors.front();
+        const float hue = flachead::palette::ColorUtil::ToHsl(first).h;
+        Check(hue < 20.0f || hue > 340.0f, "dominant hue near red for red image");
+    }
+}
 } // namespace
 
 int main()
@@ -249,5 +327,11 @@ int main()
     RunTest("FocusManager navigation", TestFocusManager);
     RunTest("CommandCenter priority", TestCommandCenter);
     RunTest("KeyToCommand mapping", TestKeyToCommand);
+    RunTest("Palette parse hex", TestParseHex);
+    RunTest("Palette hsl round trip", TestHslRoundTrip);
+    RunTest("Palette color mix", TestColorMix);
+    RunTest("Palette contrast ratio", TestContrastRatio);
+    RunTest("Palette derivation", TestPaletteDerivation);
+    RunTest("Palette dominant colors", TestDominantColors);
     return Finish();
 }
