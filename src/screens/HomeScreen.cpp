@@ -1,224 +1,151 @@
 #include "HomeScreen.hpp"
 
+#include "../dap/DapScreen.hpp"
+#include "../events/EventBus.hpp"
 #include "../math/Color.hpp"
 #include "../math/Rect.hpp"
 
 #include <algorithm>
-#include <ctime>
-#include <string>
 
+namespace flachead::dap
+{
 namespace
 {
-constexpr int   kColumns   = 3;
-constexpr float kCardW     = 160.0f;
-constexpr float kCardH     = 120.0f;
-constexpr float kCardGapX  = 20.0f;
-constexpr float kCardGapY  = 18.0f;
-constexpr float kGridTop   = 88.0f;
-constexpr float kStatusH   = 44.0f;
+const Color kAccent   = Color{124, 58, 237, 255};
+const Color kFg       = Color{226, 232, 240, 255};
+const Color kFgMuted  = Color{148, 163, 184, 255};
+const Color kLine     = Color{30, 36, 51, 255};
+const Color kRowSel   = Color{28, 35, 51, 255};
+const Color kRowBg    = Color{16, 20, 30, 255};
+constexpr float kRowH = 46.0f;
 } // namespace
 
-void HomeScreen::SetLaunchHandler(LaunchHandler handler) { m_OnLaunch = std::move(handler); }
-void HomeScreen::SetBackHandler(BackHandler handler)     { m_OnBack  = std::move(handler); }
-
-void HomeScreen::OnEnter()
+HomeScreen::HomeScreen(const AppContext& context)
+    : DapScreen(context, "Home")
 {
-    m_EnterAnim = 0.0f;
+    Subscribe(flachead::events::Type::TrackChanged);
+    Subscribe(flachead::events::Type::PlaybackStarted);
+    Subscribe(flachead::events::Type::PlaybackPaused);
+    Subscribe(flachead::events::Type::PlaybackResumed);
+    Subscribe(flachead::events::Type::PlaybackStopped);
+    Subscribe(flachead::events::Type::PlaybackFinished);
+    Subscribe(flachead::events::Type::QueueChanged);
 }
 
-void HomeScreen::OnUpdate(float deltaSeconds)
+void HomeScreen::RefreshData()
 {
-    m_EnterAnim = std::min(1.0f, m_EnterAnim + deltaSeconds * 3.5f);
-}
-
-bool HomeScreen::NeedsRender() const
-{
-    return m_EnterAnim < 1.0f;
-}
-
-void HomeScreen::DrawStatusBar(flachead::ui::Canvas& canvas, int width)
-{
-    // Dark translucent strip at top
-    canvas.FillRect(Rect{0.0f, 0.0f, static_cast<float>(width), kStatusH},
-                    Color{5, 7, 12, 240});
-
-    // FLACHEAD wordmark left
-    canvas.DrawText(Rect{20.0f, 10.0f, 160.0f, 24.0f}, "FLACHEAD",
-                    Color{241, 245, 249, 255}, 20.0f);
-
-    // Separator line
-    canvas.DrawLine(0.0f, kStatusH, static_cast<float>(width), kStatusH,
-                    Color{30, 36, 51, 255});
-
-    // Time + battery right
-    std::time_t t = std::time(nullptr);
-    std::tm* tm_info = std::localtime(&t);
-    char timeBuf[16];
-    std::strftime(timeBuf, sizeof(timeBuf), "%H:%M", tm_info);
-
-    canvas.DrawText(Rect{static_cast<float>(width) - 180.0f, 12.0f, 80.0f, 20.0f},
-                    timeBuf, Color{200, 210, 220, 255}, 16.0f);
-
-    // Battery pill
-    const float bx = static_cast<float>(width) - 84.0f;
-    const float by = 13.0f;
-    canvas.FillRoundedRect(Rect{bx, by, 60.0f, 18.0f}, 4.0f, Color{20, 26, 38, 255});
-    canvas.FillRoundedRect(Rect{bx + 2.0f, by + 2.0f, 46.0f, 14.0f}, 3.0f, Color{34, 211, 238, 255});
-    canvas.DrawText(Rect{bx + 6.0f, by + 1.0f, 50.0f, 16.0f}, "82%",
-                    Color{5, 7, 12, 255}, 13.0f);
-}
-
-void HomeScreen::DrawAppGrid(flachead::ui::Canvas& canvas, int width)
-{
-    const int   count   = static_cast<int>(m_Apps.size());
-    const float gridW   = kColumns * kCardW + (kColumns - 1) * kCardGapX;
-    const float startX  = (static_cast<float>(width) - gridW) * 0.5f;
-
-    const Color accent    = Color{124, 58, 237, 255};
-    const Color accentGlow= Color{124, 58, 237, 60};
-    const Color cardBg    = Color{14, 18, 28, 255};
-    const Color cardBgSel = Color{20, 14, 42, 255};
-    const Color border    = Color{30, 36, 51, 255};
-    const Color fgPrimary = Color{241, 245, 249, 255};
-    const Color fgMuted   = Color{100, 116, 139, 255};
-
-    for (int idx = 0; idx < count; ++idx)
-    {
-        const int   row = idx / kColumns;
-        const int   col = idx % kColumns;
-        const float cx  = startX + col * (kCardW + kCardGapX);
-
-        // Staggered slide-in from below
-        const float delay   = (row * kColumns + col) * 0.04f;
-        const float anim    = std::max(0.0f, std::min(1.0f, (m_EnterAnim * 1.5f - delay)));
-        const float ease    = anim * anim * (3.0f - 2.0f * anim);
-        const float slideY  = (1.0f - ease) * 60.0f;
-        const float cy      = kGridTop + static_cast<float>(row) * (kCardH + kCardGapY) + slideY;
-
-        const bool selected = idx == m_SelectedIndex;
-
-        // Selection halo
-        if (selected)
-        {
-            canvas.FillRoundedRect(Rect{cx - 8.0f, cy - 8.0f,
-                                        kCardW + 16.0f, kCardH + 16.0f},
-                                   14.0f, accentGlow);
-        }
-
-        // Card background
-        canvas.FillRoundedRect(Rect{cx, cy, kCardW, kCardH}, 10.0f,
-                               selected ? cardBgSel : cardBg);
-
-        // Border
-        canvas.DrawRoundedRect(Rect{cx, cy, kCardW, kCardH}, 10.0f,
-                               selected ? accent : border);
-
-        if (selected)
-        {
-            // Double border for selection depth
-            canvas.DrawRoundedRect(Rect{cx + 2.0f, cy + 2.0f, kCardW - 4.0f, kCardH - 4.0f},
-                                   8.0f, Color{124, 58, 237, 100});
-        }
-
-        // Icon
-        canvas.DrawText(Rect{cx + 18.0f, cy + 18.0f, 40.0f, 36.0f},
-                        m_Apps[idx].icon, fgPrimary, 28.0f);
-
-        // App name
-        canvas.DrawText(Rect{cx + 14.0f, cy + 66.0f, kCardW - 28.0f, 22.0f},
-                        m_Apps[idx].name, fgPrimary, 15.0f);
-
-        // Subtitle
-        canvas.DrawText(Rect{cx + 14.0f, cy + 90.0f, kCardW - 28.0f, 16.0f},
-                        m_Apps[idx].subtitle, fgMuted, 12.0f);
-    }
+    const auto& playback = *Ctx().playback;
+    const auto& track = playback.CurrentTrack();
+    m_HasPlayback = track.Valid();
+    m_NowPlayingTitle = m_HasPlayback ? track.DisplayTitle() : "Nothing playing";
+    m_NowPlayingArtist = m_HasPlayback ? track.DisplayArtist() : "Pick a track from the library";
+    m_Playing = playback.IsPlaying();
 }
 
 void HomeScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
 {
-    canvas.FillRect(Rect{0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)},
-                    Color{5, 7, 12, 255});
-
+    UpdateViewSize(width, height);
+    DrawBackground(canvas, width, height);
     DrawStatusBar(canvas, width);
-    DrawAppGrid(canvas, width);
+    DrawHeader(canvas, width, Title(),
+               m_HasPlayback ? (m_Playing ? "Now playing" : "Paused") : "No playback");
 
-    // Bottom hint
-    canvas.DrawText(Rect{0.0f, static_cast<float>(height) - 26.0f, static_cast<float>(width), 20.0f},
-                    "ARROWS: navigate   ENTER: open   ESC: exit",
-                    Color{40, 50, 70, 255}, 12.0f);
+    // Now-playing hero.
+    const float heroH = 96.0f;
+    const float hy = kStatusH + kHeaderH + 8.0f;
+    canvas.FillRoundedRect(Rect{20.0f, hy, static_cast<float>(width) - 40.0f, heroH}, 10.0f,
+                           m_HasPlayback ? kRowSel : Color{20, 24, 36, 255});
+    canvas.DrawRoundedRect(Rect{20.0f, hy, static_cast<float>(width) - 40.0f, heroH}, 10.0f,
+                           m_HasPlayback ? kAccent : kLine);
+
+    const Color art = ArtPlaceholder(m_NowPlayingTitle);
+    canvas.FillRoundedRect(Rect{32.0f, hy + 12.0f, 72.0f, 72.0f}, 8.0f, art);
+    canvas.DrawTextCentered(Rect{32.0f, hy + 12.0f, 72.0f, 72.0f}, "♪",
+                            Color{20, 24, 36, 255}, 30.0f);
+
+    canvas.DrawText(Rect{122.0f, hy + 18.0f, static_cast<float>(width) - 220.0f, 22.0f},
+                    m_NowPlayingTitle, Color::White, 18.0f);
+    canvas.DrawText(Rect{122.0f, hy + 44.0f, static_cast<float>(width) - 220.0f, 18.0f},
+                    m_NowPlayingArtist, kFgMuted, 14.0f);
+    canvas.DrawText(Rect{122.0f, hy + 64.0f, 200.0f, 16.0f},
+                    m_HasPlayback ? "ENTER: open player" : "Run a scan to import music",
+                    kFgMuted, 12.0f);
+
+    // Navigation rows.
+    const float listTop = hy + heroH + 10.0f;
+    const float maxY = static_cast<float>(height) - kFooterH - 6.0f;
+    const int visible = std::max(1, static_cast<int>((maxY - listTop) / kRowH));
+    const int startRow = std::max(0, m_SelectedIndex - visible / 2);
+    const int endRow = std::min(static_cast<int>(m_Entries.size()), startRow + visible);
+
+    for (int i = startRow; i < endRow; ++i)
+    {
+        const float y = listTop + static_cast<float>(i - startRow) * kRowH;
+        const bool selected = i == m_SelectedIndex;
+        const auto& entry = m_Entries[static_cast<std::size_t>(i)];
+
+        canvas.FillRect(Rect{0.0f, y, static_cast<float>(width), kRowH},
+                        selected ? kRowSel : kRowBg);
+        if (selected)
+        {
+            canvas.FillRect(Rect{0.0f, y, 4.0f, kRowH}, kAccent);
+        }
+        canvas.DrawLine(0.0f, y + kRowH, static_cast<float>(width), y + kRowH, kLine);
+
+        canvas.DrawText(Rect{28.0f, y + 13.0f, 36.0f, 22.0f}, entry.icon, kAccent, 18.0f);
+        canvas.DrawText(Rect{76.0f, y + 13.0f, 300.0f, 22.0f}, entry.name,
+                        selected ? Color::White : kFg, 17.0f);
+        canvas.DrawText(Rect{static_cast<float>(width) - 120.0f, y + 14.0f, 90.0f, 18.0f},
+                        selected ? "\xe2\x96\xb8  open" : "", kFgMuted, 13.0f);
+    }
+
+    DrawFooter(canvas, width, height,
+               "UP/DOWN: navigate   ENTER: open   ESC: quit");
+}
+
+void HomeScreen::Activate()
+{
+    if (m_SelectedIndex == 0 && !m_HasPlayback && Ctx().library->SongCount() == 0)
+    {
+        Ctx().navigate("scan");
+        return;
+    }
+    Ctx().navigate(m_Entries[static_cast<std::size_t>(m_SelectedIndex)].screen);
 }
 
 bool HomeScreen::HandleEvent(const SDL_Event& event)
 {
-    switch (event.type)
+    if (event.type != SDL_EVENT_KEY_DOWN)
     {
-        case SDL_EVENT_KEY_DOWN:
-        {
-            switch (event.key.key)
+        return false;
+    }
+
+    switch (event.key.key)
+    {
+        case SDLK_ESCAPE:
+            if (m_OnBack)
             {
-                case SDLK_LEFT:
-                    Select(m_SelectedIndex - 1);
-                    return true;
-                case SDLK_RIGHT:
-                    Select(m_SelectedIndex + 1);
-                    return true;
-                case SDLK_UP:
-                    Select(m_SelectedIndex - kColumns);
-                    return true;
-                case SDLK_DOWN:
-                    Select(m_SelectedIndex + kColumns);
-                    return true;
-                case SDLK_RETURN:
-                case SDLK_KP_ENTER:
-                    ActivateSelection();
-                    return true;
-                case SDLK_ESCAPE:
-                    if (m_OnBack)
-                        m_OnBack();
-                    return true;
-                default:
-                    break;
+                m_OnBack();
             }
-            break;
-        }
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        {
-            const float mx = static_cast<float>(event.button.x);
-            const float my = static_cast<float>(event.button.y);
-            const int   count = static_cast<int>(m_Apps.size());
-            const float gridW = kColumns * kCardW + (kColumns - 1) * kCardGapX;
-            // Use a reasonable default width for hit testing
-            const float startX = (900.0f - gridW) * 0.5f;
-            for (int idx = 0; idx < count; ++idx)
+            else
             {
-                const int   row = idx / kColumns;
-                const int   col = idx % kColumns;
-                const float cx  = startX + col * (kCardW + kCardGapX);
-                const float cy  = kGridTop + static_cast<float>(row) * (kCardH + kCardGapY);
-                if (mx >= cx && mx <= cx + kCardW && my >= cy && my <= cy + kCardH)
-                {
-                    Select(idx);
-                    ActivateSelection();
-                    return true;
-                }
+                Ctx().goBack();
             }
-            break;
-        }
+            return true;
+        case SDLK_UP:
+            m_SelectedIndex = std::max(0, m_SelectedIndex - 1);
+            return true;
+        case SDLK_DOWN:
+            m_SelectedIndex = std::min(static_cast<int>(m_Entries.size()) - 1,
+                                       m_SelectedIndex + 1);
+            return true;
+        case SDLK_RETURN:
+        case SDLK_KP_ENTER:
+            Activate();
+            return true;
         default:
             break;
     }
     return false;
 }
-
-void HomeScreen::Select(int index)
-{
-    if (m_Apps.empty())
-        return;
-    m_SelectedIndex = std::clamp(index, 0, static_cast<int>(m_Apps.size() - 1));
-}
-
-void HomeScreen::ActivateSelection()
-{
-    if (m_OnLaunch)
-        m_OnLaunch(m_Apps[m_SelectedIndex].name);
-}
+} // namespace flachead::dap

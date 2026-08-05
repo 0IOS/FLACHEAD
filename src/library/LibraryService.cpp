@@ -149,6 +149,20 @@ std::vector<SongModel> LibraryService::Recent(int limit) const
     return result;
 }
 
+std::vector<SongModel> LibraryService::RecentlyAdded(int limit) const
+{
+    std::vector<SongModel> result;
+    Statement stmt = m_Db.Prepare(
+        "SELECT " kSongColumns " FROM songs "
+        "ORDER BY date_added DESC, id DESC LIMIT ?;");
+    stmt.Bind(1, limit);
+    while (stmt.Step() == SQLITE_ROW)
+    {
+        result.push_back(RowToSong(stmt));
+    }
+    return result;
+}
+
 std::vector<SongModel> LibraryService::Favorites() const
 {
     std::vector<SongModel> result;

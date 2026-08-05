@@ -82,6 +82,7 @@ public:
     bool IsPlaying() const { return m_State == PlaybackState::Playing; }
     double PositionSeconds() const { return m_Audio.GetPositionSeconds(); }
     double DurationSeconds() const { return m_Audio.GetDurationSeconds(); }
+    std::string_view BackendName() const { return m_Audio.BackendName(); }
 
 private:
     void Subscribe();

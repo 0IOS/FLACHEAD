@@ -1,15 +1,23 @@
 #include "Application.hpp"
 
-#include "../apps/AppScreens.hpp"
 #include "../core/Time.hpp"
+#include "../dap/LibraryScreens.hpp"
+#include "../dap/PlaybackScreens.hpp"
+#include "../dap/PlaylistScreens.hpp"
+#include "../dap/SettingsScreen.hpp"
+#include "../playback/QueueManager.hpp"
+#include "../screens/HomeScreen.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include <cstdlib>
+#include <cerrno>
 #include <cmath>
 #include <cstring>
 #include <cstdio>
 #include <ctime>
 #include <iostream>
+#include <sys/stat.h>
 namespace
 {
 constexpr float kFpsSampleSeconds = 1.0f;
@@ -52,6 +60,9 @@ Application::Application(float benchmarkSeconds, std::string_view inputBackend)
           // The engine animator is available for future screen and widget transitions.
       }),
       m_AudioService(m_EventBus),
+      m_LibraryService(m_Database, m_EventBus),
+      m_Playback(m_AudioService, m_EventBus),
+      m_Playlists(m_Database, m_EventBus),
       m_BenchmarkSeconds(benchmarkSeconds)
 {
     if (inputBackend == "gpio")
@@ -109,132 +120,138 @@ bool Application::Initialize()
     m_AudioService.Initialize();
     m_Canvas = new flachead::ui::Canvas(m_Renderer, m_FontManager, m_ThemeManager);
 
-    RegisterScreens();
+    SetupServices();
+    RegisterScreens(m_AppContext);
 
-    m_ScreenManager.Push("launcher");
+    m_ScreenManager.Push("home");
     m_Running = true;
 
     return true;
 }
 
-void Application::RegisterScreens()
+void Application::SetupServices()
 {
-    m_ScreenManager.RegisterFactory("launcher", [this] {
-        auto screen = std::make_unique<HomeScreen>();
-        screen->SetLaunchHandler([this](std::string_view app) {
-            if (app == "Music")
+    const char* home = std::getenv("HOME");
+    const std::string baseDir = home ? std::string(home) + "/.flachead" : "/tmp/flachead";
+
+    if (::mkdir(baseDir.c_str(), 0755) != 0 && errno != EEXIST)
+    {
+        flachead::core::Logger::Warning("Could not create config dir " + baseDir);
+    }
+
+    const std::string dbPath = baseDir + "/flachead.db";
+    if (!m_Database.Open(dbPath))
+    {
+        flachead::core::Logger::Warning("Failed to open database " + dbPath);
+    }
+    else
+    {
+        m_Database.Migrate();
+    }
+
+    m_SettingsManager.Initialize(m_Database, m_EventBus);
+    m_Playback.Initialize();
+
+    // Persist volume through settings and count plays through the library.
+    m_Playback.SetVolumeStore([this](float volume) {
+        m_SettingsManager.SetFloat("audio.volume", volume);
+    });
+    m_Playback.SetPlayHook([this](const flachead::models::SongModel& song) {
+        m_LibraryService.MarkPlayed(song);
+    });
+
+    // Restore persisted player state.
+    m_Playback.SetVolume(m_SettingsManager.GetFloat("audio.volume", 0.8f));
+    m_Playback.SetRepeat(static_cast<flachead::playback::RepeatMode>(
+        m_SettingsManager.GetInt("playback.repeat", 0)));
+    if (m_SettingsManager.GetBool("playback.shuffle", false))
+    {
+        m_Playback.ToggleShuffle();
+    }
+
+    // Scan roots from settings, defaulting to $HOME/Music.
+    const std::string configuredRoot = m_SettingsManager.Get("library.scan_roots");
+    if (!configuredRoot.empty())
+    {
+        m_ScanRoots.push_back(configuredRoot);
+    }
+    else
+    {
+        const std::string defaultRoot = home ? std::string(home) + "/Music" : "";
+        if (!defaultRoot.empty())
+        {
+            struct stat st;
+            if (::stat(defaultRoot.c_str(), &st) == 0 && S_ISDIR(st.st_mode))
             {
-                m_ScreenManager.Push("music");
+                m_ScanRoots.push_back(defaultRoot);
             }
-            else if (app == "Gallery")
-            {
-                m_ScreenManager.Push("gallery");
-            }
-            else if (app == "Video")
-            {
-                m_ScreenManager.Push("video");
-            }
-            else if (app == "Calculator")
-            {
-                m_ScreenManager.Push("calculator");
-            }
-            else if (app == "Calendar")
-            {
-                m_ScreenManager.Push("calendar");
-            }
-            else if (app == "Notes")
-            {
-                m_ScreenManager.Push("notes");
-            }
-            else if (app == "Settings")
-            {
-                m_ScreenManager.Push("settings");
-            }
-            else if (app == "File Browser")
-            {
-                m_ScreenManager.Push("filebrowser");
-            }
-            else if (app == "Power")
-            {
-                m_ScreenManager.Push("power");
-            }
-        });
-        screen->SetBackHandler([this] {
-            m_Running = false;
-        });
+        }
+    }
+
+    m_AppContext.eventBus = &m_EventBus;
+    m_AppContext.library = &m_LibraryService;
+    m_AppContext.playback = &m_Playback;
+    m_AppContext.settings = &m_SettingsManager;
+    m_AppContext.playlists = &m_Playlists;
+    m_AppContext.scanRoots = m_ScanRoots;
+    m_AppContext.navigate = [this](std::string_view name) { m_ScreenManager.Push(name); };
+    m_AppContext.goBack = [this] { m_ScreenManager.Pop(); };
+
+    if (!m_ScanRoots.empty())
+    {
+        m_LibraryService.StartScan(m_ScanRoots);
+    }
+}
+
+void Application::RegisterScreens(const flachead::dap::AppContext& context)
+{
+    m_ScreenManager.RegisterFactory("home", [this, context] {
+        auto screen = std::make_unique<flachead::dap::HomeScreen>(context);
+        screen->SetBackHandler([this] { m_Running = false; });
         return screen;
     });
 
-    m_ScreenManager.RegisterFactory("music", [this] {
-        auto screen = std::make_unique<flachead::apps::MusicScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("nowplaying", [context] {
+        return std::make_unique<flachead::dap::NowPlayingScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("gallery", [this] {
-        auto screen = std::make_unique<flachead::apps::GalleryScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("queue", [context] {
+        return std::make_unique<flachead::dap::QueueScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("video", [this] {
-        auto screen = std::make_unique<flachead::apps::VideoScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("scan", [context] {
+        return std::make_unique<flachead::dap::ScanScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("calculator", [this] {
-        auto screen = std::make_unique<flachead::apps::CalculatorScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("songs", [context] {
+        return std::make_unique<flachead::dap::SongsScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("calendar", [this] {
-        auto screen = std::make_unique<flachead::apps::CalendarScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("albums", [context] {
+        return std::make_unique<flachead::dap::AlbumsScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("notes", [this] {
-        auto screen = std::make_unique<flachead::apps::NotesScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("album", [context] {
+        return std::make_unique<flachead::dap::AlbumScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("settings", [this] {
-        auto screen = std::make_unique<flachead::apps::SettingsScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("artists", [context] {
+        return std::make_unique<flachead::dap::ArtistsScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("filebrowser", [this] {
-        auto screen = std::make_unique<flachead::apps::FileBrowserScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("artist", [context] {
+        return std::make_unique<flachead::dap::ArtistScreen>(context);
     });
-
-    m_ScreenManager.RegisterFactory("power", [this] {
-        auto screen = std::make_unique<flachead::apps::PowerScreen>();
-        screen->SetBackHandler([this] {
-            m_ScreenManager.Pop();
-        });
-        return screen;
+    m_ScreenManager.RegisterFactory("search", [context] {
+        return std::make_unique<flachead::dap::SearchScreen>(context);
+    });
+    m_ScreenManager.RegisterFactory("favorites", [context] {
+        return std::make_unique<flachead::dap::FavoritesScreen>(context);
+    });
+    m_ScreenManager.RegisterFactory("recent", [context] {
+        return std::make_unique<flachead::dap::RecentScreen>(context);
+    });
+    m_ScreenManager.RegisterFactory("playlists", [context] {
+        return std::make_unique<flachead::dap::PlaylistsScreen>(context);
+    });
+    m_ScreenManager.RegisterFactory("playlist", [context] {
+        return std::make_unique<flachead::dap::PlaylistScreen>(context);
+    });
+    m_ScreenManager.RegisterFactory("dapsettings", [context] {
+        return std::make_unique<flachead::dap::SettingsScreen>(context);
     });
 }
 
@@ -310,6 +327,8 @@ void Application::Run()
 
         m_Animator.Tick(deltaSeconds);
         m_AppManager.Tick(deltaSeconds);
+        m_AudioService.PollBackendEvents();
+        m_Playback.Update(deltaSeconds);
         m_ScreenManager.Update(deltaSeconds);
 
         bool handled = false;
@@ -416,12 +435,15 @@ void Application::Shutdown()
         return;
     }
 
+    m_Playback.Shutdown();
     m_AudioService.Shutdown();
+    m_LibraryService.WaitForScan();
     m_AppManager.Shutdown();
     m_Resources.Shutdown();
     m_Renderer.Destroy();
     m_FontManager.ReleaseAll();
     m_Window.Destroy();
+    m_Database.Close();
     delete m_Canvas;
     m_Canvas = nullptr;
     m_Running = false;

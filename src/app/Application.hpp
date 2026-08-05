@@ -5,13 +5,17 @@
 #include "../audio/AudioService.hpp"
 #include "../core/Logger.hpp"
 #include "../core/Renderer.hpp"
+#include "../database/Database.hpp"
+#include "../dap/AppContext.hpp"
 #include "../events/EventBus.hpp"
 #include "../filesystem/FileSystem.hpp"
 #include "../graphics/FontManager.hpp"
 #include "../input/GpioInputBackend.hpp"
 #include "../input/InputBackend.hpp"
 #include "../input/SdlInputBackend.hpp"
-#include "../screens/HomeScreen.hpp"
+#include "../library/LibraryService.hpp"
+#include "../playback/PlaybackController.hpp"
+#include "../playback/PlaylistEngine.hpp"
 #include "../screens/ScreenManager.hpp"
 #include "../services/BatteryManager.hpp"
 #include "../resource/ResourceManager.hpp"
@@ -25,7 +29,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <string_view>
+#include <vector>
 
 class Application
 {
@@ -38,10 +44,12 @@ public:
     void Shutdown();
 
 private:
-    void RegisterScreens();
+    void RegisterScreens(const flachead::dap::AppContext& context);
+    void SetupServices();
     void RenderFrame(int width, int height);
     void UpdateFrameTier(float renderMs);
 
+    flachead::events::EventBus m_EventBus;
     flachead::system::Window m_Window;
     flachead::core::Renderer m_Renderer;
     flachead::graphics::FontManager m_FontManager;
@@ -54,13 +62,18 @@ private:
     flachead::models::SettingsModel m_Settings;
     flachead::input::InputBackend* m_InputBackend{nullptr};
     std::unique_ptr<flachead::input::InputBackend> m_OwnedInputBackend;
-    flachead::events::EventBus m_EventBus;
     flachead::audio::AudioService m_AudioService;
+    flachead::database::Database m_Database;
+    flachead::library::LibraryService m_LibraryService;
+    flachead::playback::PlaybackController m_Playback;
+    flachead::playback::PlaylistEngine m_Playlists;
     flachead::filesystem::FileSystem m_FileSystem;
     flachead::services::SettingsManager m_SettingsManager;
     flachead::services::StorageManager m_StorageManager;
     flachead::services::BatteryManager m_BatteryManager;
     flachead::animation::Animator m_Animator;
+    flachead::dap::AppContext m_AppContext;
+    std::vector<std::string> m_ScanRoots;
 
     float m_BenchmarkSeconds{0.0f};
     float m_FpsAccumulator{0.0f};

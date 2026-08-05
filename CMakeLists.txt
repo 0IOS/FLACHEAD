@@ -34,6 +34,11 @@ add_executable(FLACHEAD
     src/core/Renderer.cpp
     src/core/Time.cpp
     src/database/Database.cpp
+    src/dap/DapScreen.cpp
+    src/dap/LibraryScreens.cpp
+    src/dap/PlaybackScreens.cpp
+    src/dap/PlaylistScreens.cpp
+    src/dap/SettingsScreen.cpp
     src/events/EventBus.cpp
     src/filesystem/FileSystem.cpp
     src/graphics/Font.cpp
@@ -178,4 +183,28 @@ if(FLACHEAD_BUILD_TESTS)
     target_link_libraries(flachead_test_playback PRIVATE sqlite3 ${CMAKE_DL_LIBS})
     target_compile_features(flachead_test_playback PRIVATE cxx_std_20)
     add_test(NAME flachead_test_playback COMMAND flachead_test_playback)
+
+    add_executable(flachead_test_app_wiring
+        tests/test_app_wiring.cpp
+        src/playback/QueueManager.cpp
+        src/playback/PlaybackController.cpp
+        src/library/AlbumArtExtractor.cpp
+        src/library/LibraryScanner.cpp
+        src/library/LibraryService.cpp
+        src/audio/AudioService.cpp
+        src/audio/MpvBackend.cpp
+        src/audio/NullBackend.cpp
+        src/database/Database.cpp
+        src/core/Logger.cpp
+        src/core/PathUtils.cpp
+        src/events/EventBus.cpp
+        src/metadata/FFprobeExtractor.cpp
+        src/metadata/Json.cpp
+        src/metadata/Metadata.cpp
+        src/services/SettingsManager.cpp
+    )
+    target_include_directories(flachead_test_app_wiring PRIVATE third_party/mpv/include)
+    target_link_libraries(flachead_test_app_wiring PRIVATE sqlite3 ${CMAKE_DL_LIBS})
+    target_compile_features(flachead_test_app_wiring PRIVATE cxx_std_20)
+    add_test(NAME flachead_test_app_wiring COMMAND flachead_test_app_wiring)
 endif()

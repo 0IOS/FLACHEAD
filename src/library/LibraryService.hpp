@@ -33,6 +33,7 @@ public:
     bool IsScanning() const { return m_Scanner.IsScanning(); }
     void CancelScan() { m_Scanner.Cancel(); }
     void WaitForScan() { m_Scanner.Wait(); }
+    int  LastScanCount() const { return m_Scanner.LastScanCount(); }
 
     // --- Queries -----------------------------------------------------------
     int  SongCount() const;
@@ -40,6 +41,7 @@ public:
     std::vector<flachead::models::SongModel> SongsInFolder(const std::string& folder) const;
     std::vector<flachead::models::SongModel> Search(const std::string& query) const;
     std::vector<flachead::models::SongModel> Recent(int limit) const;
+    std::vector<flachead::models::SongModel> RecentlyAdded(int limit) const;
     std::vector<flachead::models::SongModel> Favorites() const;
     std::vector<flachead::models::SongModel> DuplicateTitles() const;
 
