@@ -78,32 +78,24 @@ void AmbientHomeScreen::BuildPlayerView()
     auto& root = Root();
     const flachead::palette::Palette& p = Themes().ActivePalette();
 
-    auto panel = std::make_unique<flachead::ui::Container>();
-    panel->SetId("panel");
-    panel->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical));
-    flachead::ui::Widget* panelRaw = panel.get();
-    root.AddChild(std::move(panel));
+    root.SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical, 18.0f, 18.0f));
 
     m_Cover = new flachead::ui::Image();
     m_Cover->SetId("cover");
+    m_Cover->SetCornerRadius(28.0f);
+    m_Cover->SetPlaceholderColor(p.surfaceRaised);
     auto cover = std::unique_ptr<flachead::ui::Image>(m_Cover);
-    panelRaw->AddChild(std::move(cover));
+    root.AddChild(std::move(cover));
 
-    m_Title = MakeLabel("", 16.0f, *panelRaw);
-    m_Subtitle = MakeLabel("", 12.0f, *panelRaw);
-
-    m_Progress = new flachead::ui::ProgressBar();
-    m_Progress->SetColor(p.accent);
-    m_Progress->SetTrackColor(p.border);
-    m_Progress->SetCornerRadius(3.0f);
-    m_Progress->SetFocusable(false);
-    auto progress = std::unique_ptr<flachead::ui::ProgressBar>(m_Progress);
-    panelRaw->AddChild(std::move(progress));
+    m_Title = MakeLabel("", 20.0f, root);
+    m_Title->SetAlign(flachead::ui::Label::Align::Center);
+    m_Subtitle = MakeLabel("", 13.0f, root);
+    m_Subtitle->SetAlign(flachead::ui::Label::Align::Center);
 
     auto lyricPanel = std::make_unique<flachead::ui::Container>();
-    lyricPanel->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical));
+    lyricPanel->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical, 6.0f, 0.0f));
+    root.AddChild(std::move(lyricPanel));
     auto* lyricPanelRaw = lyricPanel.get();
-    panelRaw->AddChild(std::move(lyricPanel));
 
     m_PreviousLyric = MakeLabel("Previous lyric", 11.0f, *lyricPanelRaw);
     m_PreviousLyric->SetAlign(flachead::ui::Label::Align::Center);
@@ -112,30 +104,36 @@ void AmbientHomeScreen::BuildPlayerView()
     m_NextLyric = MakeLabel("Next lyric", 11.0f, *lyricPanelRaw);
     m_NextLyric->SetAlign(flachead::ui::Label::Align::Center);
 
+    m_Progress = new flachead::ui::ProgressBar();
+    m_Progress->SetColor(p.accent);
+    m_Progress->SetTrackColor(p.border);
+    m_Progress->SetCornerRadius(4.0f);
+    m_Progress->SetFocusable(false);
+    auto progress = std::unique_ptr<flachead::ui::ProgressBar>(m_Progress);
+    root.AddChild(std::move(progress));
+
     auto timeRow = std::make_unique<flachead::ui::Container>();
-    timeRow->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal));
+    timeRow->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal, 8.0f, 0.0f));
     flachead::ui::Widget* timeRowRaw = timeRow.get();
-    panelRaw->AddChild(std::move(timeRow));
-    m_Position = MakeLabel("0:00", 10.0f, *timeRowRaw);
+    root.AddChild(std::move(timeRow));
+    m_Position = MakeLabel("0:00", 11.0f, *timeRowRaw);
     m_Position->SetAlign(flachead::ui::Label::Align::Left);
-    m_Duration = MakeLabel("0:00", 10.0f, *timeRowRaw);
+    m_Duration = MakeLabel("0:00", 11.0f, *timeRowRaw);
     m_Duration->SetAlign(flachead::ui::Label::Align::Right);
 
     auto transport = std::make_unique<flachead::ui::Container>();
-    transport->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal));
+    transport->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal, 10.0f, 0.0f));
     flachead::ui::Widget* transportRaw = transport.get();
-    panelRaw->AddChild(std::move(transport));
+    root.AddChild(std::move(transport));
 
-    auto prev = MakeButton("|<", "prev", *transportRaw, [this] { Ctx().playback->Previous(); });
-    (void)prev;
+    MakeButton("|<", "prev", *transportRaw, [this] { Ctx().playback->Previous(); });
     m_PlayPause = MakeButton(">", "playpause", *transportRaw, [this] { Ctx().playback->Toggle(); });
-    auto next = MakeButton(">|", "next", *transportRaw, [this] { Ctx().playback->Next(); });
-    (void)next;
+    MakeButton(">|", "next", *transportRaw, [this] { Ctx().playback->Next(); });
 
     auto utility = std::make_unique<flachead::ui::Container>();
-    utility->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal));
+    utility->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal, 10.0f, 0.0f));
     flachead::ui::Widget* utilityRaw = utility.get();
-    panelRaw->AddChild(std::move(utility));
+    root.AddChild(std::move(utility));
 
     m_Favorite = MakeButton("Fav", "fav", *utilityRaw, [this] {
         const auto& track = Ctx().playback->CurrentTrack();
@@ -147,12 +145,8 @@ void AmbientHomeScreen::BuildPlayerView()
     });
     m_Shuffle = MakeButton("Shuf", "shuffle", *utilityRaw, [this] { Ctx().playback->ToggleShuffle(); });
     m_Repeat = MakeButton("Rep", "repeat", *utilityRaw, [this] { Ctx().playback->ToggleRepeat(); });
-    auto search = MakeButton("Find", "search", *utilityRaw, [this] {
-        Ctx().navigate("universal_search");
-    });
-    (void)search;
-    auto menu = MakeButton("Apps", "menu", *utilityRaw, [this] { Ctx().navigate("launcher"); });
-    (void)menu;
+    MakeButton("Search", "search", *utilityRaw, [this] { Ctx().navigate("universal_search"); });
+    MakeButton("Apps", "menu", *utilityRaw, [this] { Ctx().navigate("launcher"); });
 
     RefreshTrack();
 }
@@ -160,32 +154,30 @@ void AmbientHomeScreen::BuildPlayerView()
 void AmbientHomeScreen::BuildIdleView()
 {
     auto& root = Root();
-    auto panel = std::make_unique<flachead::ui::Container>();
-    panel->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical));
-    flachead::ui::Widget* panelRaw = panel.get();
-    root.AddChild(std::move(panel));
+    root.SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical, 16.0f, 18.0f));
 
-    m_EmptyTitle = MakeLabel("Nothing playing", 18.0f, *panelRaw);
-    auto hint = MakeLabel("Tap Apps to browse your library", 12.0f, *panelRaw);
+    m_EmptyTitle = MakeLabel("Nothing playing", 20.0f, root);
+    m_EmptyTitle->SetAlign(flachead::ui::Label::Align::Center);
+    auto hint = MakeLabel("Browse the library or search for a song.", 13.0f, root);
+    hint->SetAlign(flachead::ui::Label::Align::Center);
     (void)hint;
 
     auto row = std::make_unique<flachead::ui::Container>();
-    row->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal));
+    row->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal, 12.0f, 0.0f));
     flachead::ui::Widget* rowRaw = row.get();
-    panelRaw->AddChild(std::move(row));
+    root.AddChild(std::move(row));
 
-    auto apps = MakeButton("Apps", "apps", *rowRaw, [this] { Ctx().navigate("launcher"); });
-    (void)apps;
-    auto find = MakeButton("Find", "find", *rowRaw, [this] { Ctx().navigate("universal_search"); });
-    (void)find;
-    auto settings = MakeButton("Settings", "settings", *rowRaw, [this] { Ctx().navigate("settings"); });
-    (void)settings;
+    MakeButton("Apps", "apps", *rowRaw, [this] { Ctx().navigate("launcher"); });
+    MakeButton("Search", "find", *rowRaw, [this] { Ctx().navigate("universal_search"); });
+    MakeButton("Settings", "settings", *rowRaw, [this] { Ctx().navigate("settings"); });
 }
 
 void AmbientHomeScreen::OnShellEnter()
 {
     RefreshTrack();
     RefreshArt();
+    Wallpaper().SetTint(Color{0, 0, 0}, 0.0f);
+    Wallpaper().SetDim(0.48f);
 }
 
 void AmbientHomeScreen::RefreshTrack()

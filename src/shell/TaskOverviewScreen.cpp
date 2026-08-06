@@ -42,10 +42,11 @@ void TaskOverviewScreen::BuildShell()
 void TaskOverviewScreen::BuildOverview()
 {
     auto& root = Root();
+    root.SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical, 18.0f, 18.0f));
 
     auto heading = std::make_unique<flachead::ui::Label>();
     heading->SetText("Open apps");
-    heading->SetFontSize(16.0f);
+    heading->SetFontSize(20.0f);
     heading->SetAlign(flachead::ui::Label::Align::Left);
     root.AddChild(std::move(heading));
 
@@ -62,7 +63,7 @@ void TaskOverviewScreen::BuildOverview()
     {
         auto empty = std::make_unique<flachead::ui::Label>();
         empty->SetText("No open apps");
-        empty->SetFontSize(13.0f);
+        empty->SetFontSize(14.0f);
         empty->SetAlign(flachead::ui::Label::Align::Center);
         root.AddChild(std::move(empty));
     }
@@ -74,13 +75,15 @@ void TaskOverviewScreen::BuildOverview()
             card->SetId("task_" + task);
             card->SetText(FriendlyName(task));
             card->SetFocusable(true);
+            card->SetAccentColor(Themes().ActivePalette().accentSecondary);
+            card->SetBackground(Themes().ActivePalette().surfaceRaised);
             card->SetClickHandler([this, key = task] { Services().screens->PopTo(key); });
             root.AddChild(std::move(card));
         }
     }
 
     auto systemRow = std::make_unique<flachead::ui::Container>();
-    systemRow->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal));
+    systemRow->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Horizontal, 12.0f, 0.0f));
     flachead::ui::Widget* row = systemRow.get();
     root.AddChild(std::move(systemRow));
 
@@ -88,6 +91,7 @@ void TaskOverviewScreen::BuildOverview()
     home->SetId("home");
     home->SetText("Home");
     home->SetFocusable(true);
+    home->SetAccentColor(Themes().ActivePalette().accent);
     home->SetClickHandler([this] { Services().screens->PopTo("home"); });
     row->AddChild(std::move(home));
 
@@ -104,6 +108,13 @@ void TaskOverviewScreen::BuildOverview()
     settings->SetFocusable(true);
     settings->SetClickHandler([this] { Ctx().navigate("settings"); });
     row->AddChild(std::move(settings));
+}
+
+void TaskOverviewScreen::OnShellEnter()
+{
+    const auto& palette = Themes().ActivePalette();
+    Wallpaper().SetTint(palette.background, 0.12f);
+    Wallpaper().SetDim(0.62f);
 }
 
 void TaskOverviewScreen::BuildEmpty()

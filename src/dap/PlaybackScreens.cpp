@@ -356,48 +356,38 @@ void QueueScreen::Render(flachead::ui::Canvas& canvas, int width, int height)
         return;
     }
 
-    constexpr float rowH = 44.0f;
-    const float top = kStatusH + kHeaderH + 6.0f;
-    const float maxY = static_cast<float>(height) - kFooterH - 6.0f;
+    constexpr float rowH = 52.0f;
+    constexpr float listTop = kStatusH + kHeaderH + 6.0f + 68.0f;
+    const float maxY = static_cast<float>(height) - kFooterH - 8.0f;
     const int current = playback.CurrentIndex();
 
-    const int visible = std::max(1, static_cast<int>((maxY - top) / rowH));
+    canvas.FillRect(Rect(0.0f, kStatusH + kHeaderH + 6.0f, static_cast<float>(width), 58.0f), kControlBg);
+    if (current >= 0 && current < static_cast<int>(m_Tracks.size()))
+    {
+        const auto& currentTrack = m_Tracks[static_cast<std::size_t>(current)];
+        canvas.DrawText(Rect(20.0f, kStatusH + kHeaderH + 6.0f + 10.0f, static_cast<float>(width) - 40.0f, 24.0f),
+                        "Now playing: " + currentTrack.DisplayTitle(), Color::White, 16.0f);
+        canvas.DrawText(Rect(20.0f, kStatusH + kHeaderH + 6.0f + 32.0f, static_cast<float>(width) - 40.0f, 18.0f),
+                        currentTrack.DisplayArtist(), kFgMuted, 13.0f);
+    }
+    else
+    {
+        canvas.DrawText(Rect(20.0f, kStatusH + kHeaderH + 6.0f + 18.0f, static_cast<float>(width) - 40.0f, 24.0f),
+                        "Queue preview", Color::White, 16.0f);
+    }
+
+    const int visible = std::max(1, static_cast<int>((maxY - listTop) / rowH));
     const int startRow = std::max(0, m_SelectedIndex - visible / 2);
     const int endRow = std::min(static_cast<int>(m_Tracks.size()), startRow + visible);
 
     for (int i = startRow; i < endRow; ++i)
     {
-        const float y = top + static_cast<float>(i - startRow) * rowH;
-        std::string num;
-        if (i == current)
-        {
-            num = "▶ ";
-        }
-        else
-        {
-            char buf[8];
-            std::snprintf(buf, sizeof(buf), "%d.", i + 1);
-            num = buf;
-        }
+        const float y = listTop + static_cast<float>(i - startRow) * rowH;
         const auto& t = m_Tracks[static_cast<std::size_t>(i)];
         const bool sel = i == m_SelectedIndex;
-        canvas.FillRect(Rect{0.0f, y, static_cast<float>(width), rowH},
-                        sel ? Color{28, 35, 51, 255} : Color{16, 20, 30, 255});
-        if (sel)
-        {
-            canvas.FillRect(Rect{0.0f, y, 4.0f, rowH}, kAccent);
-        }
-        canvas.DrawLine(0.0f, y + rowH, static_cast<float>(width), y + rowH, kLine);
-
-        canvas.DrawText(Rect{16.0f, y + 12.0f, 60.0f, 20.0f}, num,
-                        i == current ? Color{34, 211, 238, 255} : Color{100, 116, 139, 255},
-                        15.0f);
-        canvas.DrawText(Rect{80.0f, y + 12.0f, static_cast<float>(width) - 260.0f, 20.0f},
-                        t.DisplayTitle(), sel ? Color::White : kFg, 16.0f);
-        canvas.DrawText(Rect{static_cast<float>(width) - 180.0f, y + 12.0f, 90.0f, 20.0f},
-                        t.DisplayArtist(), kFgMuted, 13.0f);
-        canvas.DrawText(Rect{static_cast<float>(width) - 90.0f, y + 12.0f, 70.0f, 20.0f},
-                        FormatDuration(t.duration), kFgMuted, 13.0f);
+        const std::string primary = (i == current ? "▶ " : std::to_string(i + 1) + ". ") + t.DisplayTitle();
+        const std::string secondary = t.DisplayArtist() + "  ·  " + FormatDuration(t.duration);
+        DrawRow(canvas, width, y, rowH, primary, secondary, sel);
     }
 
     DrawFooter(canvas, width, height,

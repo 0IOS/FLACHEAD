@@ -16,6 +16,7 @@ public:
 
 protected:
     void BuildShell() override;
+    void OnShellEnter() override;
     bool OnShellCommand(flachead::commands::Command command) override;
     void OnShellInput(const flachead::input::InputEvent& event) override;
     std::string_view ScreenKey() const override { return "launcher"; }

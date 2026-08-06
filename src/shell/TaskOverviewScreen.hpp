@@ -16,6 +16,7 @@ public:
 
 protected:
     void BuildShell() override;
+    void OnShellEnter() override;
     void OnShellUpdate(float deltaSeconds) override;
     bool OnShellCommand(flachead::commands::Command command) override;
     std::string_view ScreenKey() const override { return "taskoverview"; }
