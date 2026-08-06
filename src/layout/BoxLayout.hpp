@@ -49,6 +49,7 @@ public:
         m_Insets = Insets{left, right, top, bottom};
         return *this;
     }
+    BoxLayout& CornerRadius(float r) { (void)r; return *this; }
     BoxLayout& MainAxis(AxisAlign align) { m_Main = align; return *this; }
     BoxLayout& CrossAxis(CrossAlign align) { m_Cross = align; return *this; }
 

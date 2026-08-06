@@ -2,6 +2,7 @@
 
 #include "../ui/Button.hpp"
 #include "../ui/Label.hpp"
+#include "../layout/LayoutEngine.hpp"
 
 #include <algorithm>
 
@@ -28,6 +29,8 @@ ShellScreen::ShellScreen(const ShellServices& services)
       m_Root(std::make_unique<flachead::ui::Container>()),
       m_FocusPrefix("shell")
 {
+    // Enforce a full-screen root layout with consistent spacing and padding.
+    m_Root->SetLayout(flachead::layout::MakeBox(flachead::layout::Orientation::Vertical, 16.0f, 20.0f));
 }
 
 void ShellScreen::RebuildTree()
