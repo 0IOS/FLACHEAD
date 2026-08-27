@@ -666,7 +666,20 @@ Maintain playback
 
 ---
 
-# 21. Acceptance criteria
+# 21. Common performance mistakes
+
+Avoid:
+
+* large UI frameworks
+* heavy animations
+* uncached images
+* blocking operations
+* too many threads
+* repeated allocations
+
+---
+
+# 22. Acceptance criteria
 
 Implementation is complete when:
 
@@ -680,7 +693,29 @@ Implementation is complete when:
 
 ---
 
-# 22. Future improvements
+# 23. Final checklist
+
+```text
+Architecture ✓
+
+Rendering ✓
+
+Memory ✓
+
+Threads ✓
+
+Audio Sync ✓
+
+Testing ✓
+```
+
+---
+
+FLACHEAD is designed as a dedicated embedded device, not a desktop application. Every optimization decision should prioritize reliability and user experience over complexity.
+
+---
+
+# 24. Future improvements
 
 Possible additions:
 

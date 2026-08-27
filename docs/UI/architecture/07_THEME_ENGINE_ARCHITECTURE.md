@@ -14,9 +14,13 @@ FLACHEAD does not use a single static theme. The interface adapts depending on c
 
 The theme engine provides a unified system for generating, applying, and managing visual styles.
 
+It provides a unified way for all UI elements to request colors, typography, and visual tokens without implementing their own styling logic.
+
 Primary principle:
 
 > Themes should enhance the experience without consuming resources needed for playback.
+
+> The interface should adapt visually while remaining consistent and readable.
 
 ---
 
@@ -24,11 +28,19 @@ Primary principle:
 
 The theme system must be:
 
-* lightweight
-* consistent
-* cached
-* customizable
-* hardware-friendly
+* lightweight enough for Raspberry Pi Zero W
+* provide dynamic colors
+* maintain readability
+* avoid expensive real-time processing
+* separate theme generation from rendering
+* allow future custom themes
+* support caching
+
+The theme system should not:
+
+* recalculate colors every frame
+* load large image-processing libraries
+* force every application into the same style
 
 ---
 
@@ -36,7 +48,7 @@ The theme system must be:
 
 Data flow:
 
-```text id="x7m4q9"
+```text
 Theme Source
 
 ↓
@@ -62,7 +74,7 @@ UI Components
 
 FLACHEAD supports:
 
-```text id="m5x8q3"
+```text
 1. System Theme
 
 2. Music Theme
@@ -82,12 +94,13 @@ Used by:
 * launcher
 * settings
 * task overview
-
----
+* boot
+* shutdown
+* system overlays
 
 Source:
 
-```text id="v8m3x5"
+```text
 Wallpaper
 
 ↓
@@ -99,11 +112,9 @@ Color Extraction
 System Palette
 ```
 
----
-
 Generated values:
 
-```text id="c6m4x9"
+```text
 Primary Color
 
 Secondary Color
@@ -124,12 +135,11 @@ Used by:
 * full music player
 * mini player
 * lyrics view
-
----
+* queue
 
 Source:
 
-```text id="r7m3x8"
+```text
 Album Artwork
 
 ↓
@@ -140,8 +150,6 @@ Color Extraction
 
 Music Palette
 ```
-
----
 
 Example:
 
@@ -163,7 +171,7 @@ Third-party applications are isolated.
 
 Example:
 
-```text id="n8m4x6"
+```text
 Calculator App
 
 ↓
@@ -175,17 +183,68 @@ Own Theme
 FLACHEAD Hosts It
 ```
 
----
+Applications may provide a `theme.json` file:
+
+```json
+{
+  "primary":"#123456",
+  "accent":"#abcdef"
+}
+```
+
+The app theme should be sandboxed. It cannot modify:
+
+* system colors
+* global UI tokens
 
 Applications should not modify system themes.
 
 ---
 
-# 8. Theme engine components
+# 8. Theme data model
+
+A theme should not directly store UI objects. It stores reusable tokens.
+
+```text
+Theme
+
+primary
+secondary
+background
+surface
+accent
+text_primary
+text_secondary
+text_disabled
+success
+warning
+error
+contrast_mode
+```
+
+Components consume semantic colors.
+
+Example:
+
+Good:
+
+```text
+Button Accent
+```
+
+Bad:
+
+```text
+Use RGB(40,90,120)
+```
+
+---
+
+# 9. Theme engine components
 
 Required:
 
-```text id="w5m3x7"
+```text
 Theme Engine
 
 ├── Palette Generator
@@ -201,37 +260,69 @@ Theme Engine
 
 ---
 
-# 9. Color extraction
+# 10. Color extraction
 
-Artwork processing:
+Color generation should happen asynchronously.
 
-```text id="a7m4x8"
-Image
+Pipeline:
 
-↓
-
-Sample Pixels
+```text
+Image Input
 
 ↓
 
-Remove Extreme Colors
+Resize Image
+
+↓
+
+Extract Dominant Colors
 
 ↓
 
 Generate Palette
+
+↓
+
+Calculate Contrast
+
+↓
+
+Store Cache
 ```
 
----
+Because Raspberry Pi Zero W is limited, before processing:
+
+```text
+Original Image
+
+↓
+
+Resize to small thumbnail
+
+↓
+
+Analyze
+```
+
+Example:
+
+```text
+3000x3000 image
+
+becomes
+
+64x64 thumbnail
+```
 
 Avoid expensive algorithms.
 
 ---
 
-# 10. Palette generation
+# 11. Palette generation
 
 Generated palette:
 
-```text id="p6m8x2"
+```text
 Background
 
 Surface
@@ -245,100 +336,240 @@ Text
 Muted
 ```
 
+Generated colors should include:
+
+## Primary
+
+Main accent. Examples: buttons, highlights, progress bars.
+
+## Secondary
+
+Supporting color. Examples: cards, secondary controls.
+
+## Background
+
+Main UI surface.
+
+## Text colors
+
+Must include: primary text, secondary text, disabled text.
+
+## Status colors
+
+Fixed semantic colors: Success, Warning, Error.
+
+These should not become unreadable due to dynamic themes.
+
 ---
 
-Components consume semantic colors.
+# 12. Contrast management
 
----
+Dynamic colors must remain usable.
+
+The Theme Engine must calculate:
+
+* text contrast
+* brightness level
+* background suitability
+
+Small TFT displays require careful contrast.
 
 Example:
 
-Good:
-
-```text id="u5m3x9"
-Button Accent
-```
-
----
-
 Bad:
 
-```text id="k8m4x5"
-Use RGB(40,90,120)
+```text
+Light yellow background + White text
+```
+
+Good:
+
+```text
+Light yellow background + Dark text
+```
+
+Low contrast: adjust automatically.
+
+---
+
+# 13. Theme application model
+
+Components request tokens. The component does not know:
+
+* where colors came from
+* wallpaper details
+* album artwork
+
+Example:
+
+```text
+Button
+
+asks:
+
+theme.accent
+
+theme.text_primary
 ```
 
 ---
 
-# 11. Theme caching
+# 14. Theme states
 
-Theme generation should not happen repeatedly.
+The engine supports:
 
-Cache:
+```text
+Theme State
 
-```text id="d7m3x8"
-Album ID
+current_theme
+
+previous_theme
+
+source
+
+generation_status
+
+cache_status
+```
+
+---
+
+# 15. Theme switching
+
+Theme changes should be gradual but simple.
+
+Flow:
+
+```text
+New Theme Requested
 
 ↓
 
-Generated Palette
+Generate/Load Palette
+
+↓
+
+Validate Contrast
+
+↓
+
+Apply Tokens
+
+↓
+
+Refresh UI
 ```
 
----
-
-Reuse when returning to tracks.
-
----
-
-# 12. Theme transitions
-
-When theme changes:
-
-Allowed:
+When theme changes, allowed transitions:
 
 * fade
 * gradual color interpolation
 
 Duration:
 
-```text id="h5m8x2"
 100-300ms
+
+Avoid:
+
+* heavy transitions
+* rebuilding every component
+* complex transitions
+
+---
+
+# 16. Theme caching
+
+Theme generation should not happen repeatedly.
+
+Cache:
+
+* extracted palette
+* image identifier
+* theme tokens
+
+```text
+Theme Cache
+
+album_hash
+
+palette
+
+timestamp
+```
+
+Cache locations:
+
+```text
+~/.flachead/cache/themes/
+```
+
+or:
+
+```text
+/data/themes/cache/
+```
+
+depending on final filesystem design.
+
+Reuse when returning to tracks.
+
+---
+
+# 17. Music player theme behavior
+
+When a new track starts:
+
+Flow:
+
+```text
+Track Changed Event
+
+↓
+
+Check Album Cache
+
+↓
+
+Load Existing Palette
+
+OR
+
+Generate New Palette
+
+↓
+
+Update Player Theme
+```
+
+Generated once per track.
+
+---
+
+# 18. System wallpaper behavior
+
+When wallpaper changes:
+
+Flow:
+
+```text
+Wallpaper Changed
+
+↓
+
+Generate System Palette
+
+↓
+
+Update System Theme
 ```
 
 ---
 
-Avoid:
-
-Heavy transitions.
-
----
-
-# 13. Contrast management
-
-Small TFT displays require careful contrast.
-
-Theme engine must ensure:
-
-* readable text
-* visible controls
-* accessible buttons
-
----
-
-Example:
-
-Dark background:
-
-↓
-
-Light text
-
----
-
-# 14. User customization
+# 19. User customization
 
 Possible options:
 
-```text id="s6m4x9"
+```text
 Theme Mode
 
 Accent Preference
@@ -348,17 +579,15 @@ Brightness
 Wallpaper Choice
 ```
 
----
-
 Customization should override generated themes safely.
 
 ---
 
-# 15. Theme priority
+# 20. Theme priority
 
 Priority order:
 
-```text id="b8m3x5"
+```text
 Temporary Music Theme
 
 ↓
@@ -374,88 +603,140 @@ User Theme
 System Theme
 ```
 
----
-
 Context decides priority.
 
 ---
 
-# 16. Performance requirements
+# 21. Performance requirements
 
-Theme generation:
-
-Must be:
+Theme generation must be:
 
 * asynchronous
 * cached
 * low CPU
 
+Never generate colors during frame rendering.
+
+Specific targets:
+
+Color extraction:
+
+<1 second for normal artwork
+
+Theme switching:
+
+<300ms
+
+Runtime cost:
+
+Near zero after generation
+
 ---
 
-Never:
+# 22. Error handling
 
-Generate colors during frame rendering.
-
----
-
-# 17. Error handling
-
-Invalid artwork:
+## Missing artwork
 
 Fallback:
 
-```text id="x7m4q2"
+```text
 Default Music Theme
 ```
 
+## Invalid theme data
+
+Fallback:
+
+```text
+System Default Theme
+```
+
+## Color extraction failure
+
+Use:
+
+* cached palette
+* default palette
+
+Never block playback.
+
 ---
 
-Low contrast:
-
-Adjust automatically.
-
----
-
-# 18. Acceptance criteria
+# 23. Acceptance criteria
 
 Implementation is complete when:
 
-* themes apply correctly
-* colors are cached
-* text remains readable
-* theme changes do not affect playback
+* system UI can use wallpaper colors
+* music UI can use album colors
+* applications can define themes
+* themes remain readable
+* palettes are cached
+* theme generation happens off the UI thread
+* playback is never interrupted
+* Pi Zero W remains responsive
 * applications remain isolated
 
 ---
 
-# 19. Architectural recommendations
+# 24. Future improvements
 
-Required modules:
+Possible additions:
 
-```text id="d8m4x6"
-Theme Manager
-
-├── Theme Provider
-
-├── Palette Generator
-
-├── Cache
-
-├── Contrast Checker
-
-└── Theme Applier
-```
+* user-created themes
+* theme marketplace
+* animated ambient themes
+* per-album theme memory
+* advanced color controls
+* OLED optimized palettes
 
 ---
 
-# 20. Implementation notes for AI coding agent
+# 25. Architectural recommendations
+
+## Theme Manager
+
+```text
+Theme Manager
+
+├── loadTheme()
+├── generatePalette()
+├── applyTheme()
+├── cacheTheme()
+├── validateContrast()
+└── resetTheme()
+```
+
+## Event integration
+
+Theme events:
+
+```text
+WallpaperChanged
+
+AlbumChanged
+
+ThemeChanged
+```
+
+Consumed by:
+
+* UI Renderer
+* Components
+* Screens
+
+---
+
+# 26. Implementation notes for AI coding agent
 
 When implementing:
 
-* Keep themes separate from components.
-* Use semantic colors.
-* Cache generated palettes.
-* Never run heavy image processing in the render loop.
+* Keep theme generation separate from rendering.
+* Never calculate colors during frame rendering.
+* Cache everything possible.
+* Preserve readability over aesthetics.
+* Use simple color extraction algorithms.
+* Keep dynamic themes optional.
+* Use semantic colors, never raw RGB values.
 * Test readability on the actual 2.8" TFT.
 
 The FLACHEAD theme system should make the device feel premium while remaining efficient enough for Raspberry Pi Zero W.
