@@ -1649,13 +1649,11 @@ Only PCM that has passed through the conversion pipeline should enter the output
 
 Volume MUST NOT be applied inside the PCM buffer.
 
-Volume belongs to:
+Software volume (if used) is applied before PCM enters the ring buffer as part of the audio processing stage.
 
-Audio Processing or Output Hardware
+Hardware volume is handled by the output device (e.g., TANCHJIM BUNNY DSP) after the audio backend.
 
-depending on the configured architecture.
-
-This keeps the buffer purely a transport/storage layer.
+This keeps the buffer purely a transport/storage layer for final output PCM.
 
 ---
 
@@ -1665,7 +1663,7 @@ ReplayGain MUST NOT be applied by the ring buffer.
 
 If enabled:
 
-Decoder → PCM Buffer → ReplayGain Processor → Output
+Decoder → ReplayGain Processor → PCM Buffer → Output
 
 If disabled:
 
@@ -1687,13 +1685,9 @@ The buffer should not contain device-specific DSP logic.
 
 If ReplayGain, volume processing, or DSP processing exists:
 
-PCM Buffer → Processing Stage → Output
+Format Conversion → ReplayGain/Volume/DSP Processing → PCM Buffer → Output
 
-The architecture MUST define whether the buffer contains:
-
-raw decoded PCM or processed PCM
-
-The preferred architecture is to keep decoded PCM separate from processing so that bit-perfect mode remains possible.
+The ring buffer contains FINAL OUTPUT PCM. All format conversion, resampling, channel conversion, and sample-domain processing (ReplayGain, volume, EQ, DSP) MUST occur before PCM enters the ring buffer. The ring buffer MUST NOT contain source PCM or intermediate PCM formats that require further conversion before output.
 
 ---
 
@@ -2743,13 +2737,9 @@ long-lived buffer allocation during an output-format session.
 
 If ReplayGain, volume processing, or DSP processing exists:
 
-PCM Buffer → Processing Stage → Output
+Format Conversion → ReplayGain/Volume/DSP Processing → PCM Buffer → Output
 
-The architecture MUST define whether the buffer contains:
-
-raw decoded PCM or processed PCM
-
-The preferred architecture is to keep decoded PCM separate from processing so that bit-perfect mode remains possible.
+The ring buffer contains FINAL OUTPUT PCM. All format conversion, resampling, channel conversion, and sample-domain processing (ReplayGain, volume, EQ, DSP) MUST occur before PCM enters the ring buffer. The ring buffer MUST NOT contain source PCM or intermediate PCM formats that require further conversion before output.
 
 ---
 
@@ -3270,47 +3260,50 @@ The coding agent MUST:
 
 The intended production flow is:
 
-                     FLAC FILE
-                         │
-                         ▼
-                   FILE READER
-                         │
-                         ▼
-                   FLAC DECODER
-                         │
-                         │ PCM
-                         ▼
-              FORMAT CONVERSION (if required)
-                         │
-                         ▼
-              ┌────────────────────┐
-              │    PCM RING        │
-              │      BUFFER        │
-              │                    │
-              │ LOW/TARGET/HIGH    │
-              │ WATERMARKS         │
-              │                    │
-              │ bounded capacity   │
-              │ frame aligned      │
-              │ generation aware   │
-              └────────────────────┘
-                         │
-                         │ PCM frames
-                         ▼
-                  AUDIO PROCESSING
-                  (optional)
-                         │
-                         ▼
-               AUDIO OUTPUT BACKEND
-                         │
-                         ▼
-                        ALSA
-                         │
-                         ▼
-               TANCHJIM BUNNY DSP
-                         │
-                         ▼
-                     HEADPHONES
+                      FLAC FILE
+                          │
+                          ▼
+                    FILE READER
+                          │
+                          ▼
+                    FLAC DECODER
+                          │
+                          │ SOURCE PCM
+                          ▼
+               FORMAT NEGOTIATION
+                          │
+                          ▼
+               FORMAT CONVERSION (if required)
+                          │
+                          ▼
+               AUDIO PROCESSING (optional)
+               [ReplayGain, Volume, DSP]
+                          │
+                          ▼
+               ┌────────────────────┐
+               │    PCM RING        │
+               │      BUFFER        │
+               │                    │
+               │ LOW/TARGET/HIGH    │
+               │ WATERMARKS         │
+               │                    │
+               │ bounded capacity   │
+               │ frame aligned      │
+               │ generation aware   │
+               └────────────────────┘
+                          │
+                          │ FINAL OUTPUT PCM frames
+                          ▼
+                AUDIO OUTPUT BACKEND
+                          │
+                          ▼
+                         ALSA
+                          │
+                          ▼
+                TANCHJIM BUNNY DSP
+                          │
+                          ▼
+                      HEADPHONES
 
 Control path:
 

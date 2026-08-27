@@ -1346,15 +1346,21 @@ If a resampler provides multiple quality levels:
 
 select the highest quality that maintains stable real-time playback.
 
-The resampler should sit between the decoded PCM buffer and output backend.
+The resampler should sit between format negotiation and the output PCM buffer.
 
 Preferred:
 
 FLAC Decoder
     ↓
-PCM Buffer
+Source PCM
     ↓
-Resampler
+Format Negotiation
+    ↓
+Resampler / Conversion
+    ↓
+Final Output PCM
+    ↓
+PCM Ring Buffer
     ↓
 Output Backend
 
